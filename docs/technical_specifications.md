@@ -148,3 +148,12 @@ This document details the technical specifications for the zkVote project—a pr
 - **Best Practices:**
   - Following Solidity best practices (e.g., use of latest compiler, proper error handling, and security audits).
   - Consider third-party audits or formal verification for the verifier contract (not applicable for a personal project).
+
+## 9. Summary of Tools & Versions
+
+- **Circom:** v2.0.0+
+- **snarkjs:** Latest stable version
+- **Solidity:** 0.8.x
+- **Node.js:** LTS version
+- **Development Framework:** Hardhat
+- **Frontend Libraries:** ethers.js
