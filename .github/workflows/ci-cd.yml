@@ -39,6 +39,6 @@ jobs:
 
       - name: Run Docker Compose
         run: |
-          docker-compose up --build -d
+          docker compose up --build -d
           sleep 10
-          docker-compose down
+          docker compose down

@@ -52,6 +52,10 @@ This way, if a voter tries to input a number outside the allowed candidates, the
 
 Implicitly, by ensuring `vote < nCandidates + 1` and knowing that votes are positive integers, you enforce that the vote isn’t zero. You can also add an explicit check if needed.
 
+### Poseidon Hash Usage
+
+The Poseidon hash function is used in the commitment component to compute the hash from the private inputs (vote and randomness). Poseidon is chosen for its efficiency and security properties, making it well-suited for zero-knowledge proof systems like Circom.
+
 ## How This Circuit Meets Our Requirements & Mitigates Threats
 
 - **Privacy**: The use of a hash (with randomness) means that even though the voteCommitment is public, no one can deduce the vote itself.

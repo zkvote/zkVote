@@ -9,7 +9,7 @@ This document details the technical specifications for the zkVote project—a pr
 ### 2.1 Circom Circuit Design
 
 - **Circuit Language & Version:**
-  - Developed in Circom (v2.0.0 or later).
+  - Developed in Circom (v2.2.1).
 - **Cryptographic Primitives:**
   - **Hash Function:** Utilizes the Poseidon hash function (optimized for SNARKs) to generate vote commitments.
   - **Range Check:** Uses the LessThan component from circomlib to ensure that the vote value is within a valid range.
@@ -21,9 +21,17 @@ This document details the technical specifications for the zkVote project—a pr
     - `voteCommitment` (the Poseidon hash output computed off-chain).
 - **Circuit Constraints:**
   - **Commitment Verification:**
-    - The circuit computes `hash(vote, randomness)` and asserts equality with the public `voteCommitment`.
+    - The circuit computes `Poseidon(vote, randomness)` and asserts equality with the public `voteCommitment`.
   - **Range Validation:**
     - Ensures `vote < nCandidates + 1` (with an additional check that vote is non-zero if needed).
+
+### 2.2 Implementation Details of `circuits/voting.circom`
+
+The `circuits/voting.circom` file implements the vote casting logic, including commitment verification and range checks, as outlined in the [Circuit Design](circuit_design.md). The circuit ensures that the vote is valid and non-zero, and that the computed hash equals the provided voteCommitment.
+
+### 2.3 Range Checks for Valid Candidate IDs
+
+The circuit includes range checks to ensure that the vote is within the valid range of candidate IDs. This is achieved using the LessThan component from circomlib, which checks that the vote is less than or equal to the number of candidates plus one. Additionally, the circuit enforces that the vote is non-zero.
 
 ## 3. Key Generation & Trusted Setup
 
@@ -151,9 +159,9 @@ This document details the technical specifications for the zkVote project—a pr
 
 ## 9. Summary of Tools & Versions
 
-- **Circom:** v2.0.0+
-- **snarkjs:** Latest stable version
-- **Solidity:** 0.8.x
-- **Node.js:** LTS version
-- **Development Framework:** Hardhat
+- **Circom:** v2.2.1
+- **snarkjs:** 0.7.5
+- **Solidity:** 0.8.28
+- **Node.js:** v22.14.0 (Latest LTS Jod)
+- **Development Framework:** Hardhat (v2.22.19)
 - **Frontend Libraries:** ethers.js
