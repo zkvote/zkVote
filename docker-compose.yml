@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  # Defining the backend service (blockchain node and backend API)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zkvote_backend
+    # Mounting project directory for live code reloading or to share files
+    volumes:
+      - .:/app
+    # Exposing ports as necessary (example: port 8545 for a blockchain node, port 3000 for an API)
+    ports:
+      - "3000:3000"
+      - "8545:8545"
+    # Setting environment variables as necessary
+    environment:
+      - NODE_ENV=development
+
+  # Defining the frontend service (Next.js frontend)
+  frontend:
+    build:
+      # since the frontend code is in a subdirectory (./src/frontend), we need to specify the context
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: zkvote_frontend
+    # Mount the frontend code (for hot-reloading during development)
+    volumes:
+      - ./src/frontend:/app
+    # Expose the port your frontend will run on (example: 80 inside the container mapped to 8080 on your host)
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=development
