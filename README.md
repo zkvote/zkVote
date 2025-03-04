@@ -1,6 +1,6 @@
 # zkVote
 
-A private voting system which uses ZKP to prove that vote is valid without revealing the vote or voter's identity.
+Imagine a world where you can cast your vote with absolute confidence that your choice remains a secret, yet everyone can verify that your vote was counted correctly. Welcome to zkVote, a revolutionary private voting system that harnesses the power of zero-knowledge proofs (zk-SNARKs) to ensure the integrity and privacy of your vote. In this world, your identity and your vote are protected, and the entire process is transparent and secure. Whether it's for national elections, corporate decisions, or community surveys, zkVote is designed to provide a seamless and trustworthy voting experience. Dive into the future of voting with zkVote, where your voice is heard, and your privacy is preserved.
 
 ## Executive Summary
 
@@ -22,10 +22,6 @@ zkVote is a private voting system that leverages zero-knowledge proofs (zk-SNARK
 - **Security**: Ensure the integrity of the voting process and prevent fraudulent activities.
 - **Scalability**: Design the system to handle a large number of voters efficiently.
 - **Transparency**: Allow public auditing of the voting process while maintaining privacy.
-
-### Conclusion
-
-zkVote represents a significant advancement in secure and private voting systems, combining cutting-edge cryptographic techniques with practical implementation. The project documentation provides a comprehensive guide to understanding and utilizing the system, making it an excellent addition to any portfolio or resume.
 
 ## User Guide
 
