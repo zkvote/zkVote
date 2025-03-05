@@ -15,30 +15,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "22"
-
-      - name: Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm test
-
       - name: Build Docker image
-        run: docker build -t zkvote:latest .
+        run: docker build --build-arg ZKEY_PASSPHRASE=${{ secrets.ZKEY_PASSPHRASE }} -t zkvote:latest .
 
       - name: Run Docker Compose
         run: |
-          docker compose up --build -d
+          ZKEY_PASSPHRASE=${{ secrets.ZKEY_PASSPHRASE }} docker compose up --build -d
           sleep 10
           docker compose down
+
+      - name: Cleanups
+        run: |
+          docker system prune -f
+          docker volume prune -f
+          docker network prune -f

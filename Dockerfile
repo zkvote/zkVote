@@ -12,8 +12,11 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     wget \
     libgmp-dev \
+    nlohmann-json3-dev \
+    nasm \
     python3 \
     python3-pip \
+    gnupg \
  && rm -rf /var/lib/apt/lists/*
 
 # Install Rust using rustup (this installs both Rust and Cargo)
@@ -42,6 +45,16 @@ RUN npm install -g snarkjs hardhat
 
 # Set the working directory
 WORKDIR /app
+
+# Copy the contents of the current directory to the working directory
+COPY . .
+
+# Make the keys directory
+RUN mkdir keys
+
+# Decrypt the secret key
+ARG ZKEY_PASSPHRASE
+RUN gpg --quiet --batch --yes --decrypt --passphrase="$ZKEY_PASSPHRASE" --output keys/voting_0001.zkey keys/voting_0001.zkey.gpg
 
 # Start a bash shell when the container runs
 CMD ["/bin/bash"]
