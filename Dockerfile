@@ -49,9 +49,6 @@ WORKDIR /app
 # Copy the contents of the current directory to the working directory
 COPY . .
 
-# Make the keys directory
-RUN mkdir keys
-
 # Decrypt the secret key
 ARG ZKEY_PASSPHRASE
 RUN gpg --quiet --batch --yes --decrypt --passphrase="$ZKEY_PASSPHRASE" --output keys/voting_0001.zkey keys/voting_0001.zkey.gpg

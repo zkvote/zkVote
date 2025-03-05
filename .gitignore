@@ -1,4 +1,5 @@
-keys/
+keys/*
+!keys/voting_0001.zkey.gpg
 node_modules/
 package-lock.json
 dist/
