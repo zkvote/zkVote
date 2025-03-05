@@ -2,7 +2,7 @@ pragma circom 2.2.1; //The circom circuit compiler version being used
 
 // Including the necessary libraries
 include "circomlib/circuits/poseidon.circom"; // for poseidon hash
-include "circomlib/circuits/less_than.circom"; // for less than checker
+include "circomlib/circuits/comparators.circom"; // for less than checker
 
 template Voting(nCandidates) {
     // Private inputs of the circuit
@@ -18,20 +18,28 @@ template Voting(nCandidates) {
     poseidon.inputs[1] <== randomness;
 
     // Checking that the computed Poseidon hash matches the public voteCommitment
-    voteCommitment == poseidon.out;
-
-    // Check if the vote is non-zero (no candidate has ID 0)
-    vote != 0;
+    component eq = IsEqual();
+    eq.in[0] <== voteCommitment;
+    eq.in[1] <== poseidon.out;
+    eq.out === 1;
 
     // Range check to ensure that the vote is a valid candidate number.
     // The valid votes are going to be in the range [1, nCandidates]
-    component rangeCheck = LessThan(32); // bit-length to be used
-    rangeCheck.in[0] <== vote;
-    rangeCheck.in[1] <== nCandidates+1; // this will check the range from [1, nCandidates]
-    rangeCheck.out == 1; // Checking if the vote is in the range
+    // This also ensures that the vote is non-zero
+    // We will first check whether the vote is greater than 0 by checking whether 0 is less than vote
+    component minCheck = LessThan(32); // 32 bits is the size of integer we will checking
+    minCheck.in[0] <== 0;
+    minCheck.in[1] <== vote;
+    minCheck.out === 1;
+
+    // Now we will check whether the nCandidates is greater than vote by checking whether vote vote is less than nCandidates+1 (to include nCandidates as well)
+    component maxCheck = LessThan(32);
+    maxCheck.in[0] <== vote;
+    maxCheck.in[1] <== nCandidates+1;
+    maxCheck.out === 1;
 }
 
-component main = Voting(3); // Assuming 3 candidates
+component main {public [voteCommitment]} = Voting(3); // Assuming 3 candidates
 
 
 
