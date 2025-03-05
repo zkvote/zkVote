@@ -12,3 +12,4 @@ tests/circuits/voting_public.json
 tests/circuits/voting.wtns
 voting.r1cs
 voting.sym
+circuits/circomlib/
