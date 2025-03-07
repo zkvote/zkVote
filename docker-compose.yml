@@ -23,9 +23,18 @@ services:
     # Setting the working directory
     working_dir: /app
     # Running a command after the container starts (for running "npm test" or starting a blockchain node, for example)
-    command: /bin/bash -c "npm install && npm test"
+    command: >
+      /bin/bash -c "npm install && \
+      cd circuits && \
+      git clone https://github.com/iden3/circomlib.git && \
+      cd circomlib && \
+      npm install && \
+      cd .. && \
+      cd .. && \
+      npm test"
 
   # Defining the frontend service (Next.js frontend)
+
 #  frontend:
 #    build:
 #      # since the frontend code is in a subdirectory (./src/frontend), we need to specify the context

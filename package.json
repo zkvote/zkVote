@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "npx mocha tests/circuits/voting_circuit.js"
+    "test": "npx mocha tests/circuits/voting_circuit.test.js"
   },
   "repository": {
     "type": "git",
