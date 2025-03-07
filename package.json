@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "npx mocha tests/circuits/voting_circuit.test.js"
+    "test": "npx mocha tests/circuits/voting_circuit.test.js && npx hardhat test tests/contracts/verifier.test.js"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
     "hardhat": "^2.22.19"
   },
   "dependencies": {
-    "circomlibjs": "^0.1.7"
+    "circomlibjs": "^0.1.7",
+    "snarkjs": "^0.7.5"
   }
 }
