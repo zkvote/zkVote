@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "npx mocha tests/circuits/voting_circuit.test.js && npx hardhat test tests/contracts/verifier.test.js"
+    "test": "npx mocha tests/circuits/voting_circuit.test.js && npx hardhat test tests/contracts/verifier.test.js && npx hardhat test tests/contracts/votingManager.test.js"
   },
   "repository": {
     "type": "git",

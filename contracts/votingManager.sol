@@ -121,7 +121,7 @@ contract VotingManager {
 
     /// @notice Allows the admin to end a voting session.
     /// @param _sessionId ID of the voting session to end
-    function closeSession(uint256 _sessionId) external onlyAdmin onlyActiveSession(_sessionId) {
+    function closeVotingSession(uint256 _sessionId) external onlyAdmin onlyActiveSession(_sessionId) {
         votingSessions[_sessionId].isActive = false; // Mark the voting session as inactive
         emit VotingSessionEnded(_sessionId); // Emit event to indicate the session is ended
     }

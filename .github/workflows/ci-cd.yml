@@ -22,6 +22,7 @@ jobs:
         run: |
           ZKEY_PASSPHRASE=${{ secrets.ZKEY_PASSPHRASE }} docker compose up --build -d
           sleep 10
+          docker compose logs
           docker compose down
 
       - name: Cleanups

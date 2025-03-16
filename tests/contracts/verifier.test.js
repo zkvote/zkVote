@@ -103,6 +103,35 @@ describe("Integration Test: circuit and smart contract", function () {
     const isValid = await verifier.verifyProof(a, b, c, publicSignals);
     expect(isValid).to.be.true;
   });
+
+  // Test case to check the verification of a proof with incorrect proof
+  it("Should not verify an invalid proof", async function () {
+    // Change the value of the proof to simulate an invalid proof
+    // Read the input JSON file
+    const input = JSON.parse(fs.readFileSync(inputPath, "utf8"));
+
+    // Generate the proof using snarkjs (the groth16 proving system)
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+      input,
+      wasmPath,
+      zkeyPath
+    );
+
+    // Modify the proof to make it invalid
+    proof.pi_a[0] = BigInt(proof.pi_a[0]) + BigInt(1); // Change the first element of pi_a to make it invalid
+
+    // Convert the proof and public signals to the required format for the verifier smart contract
+    const a = [BigInt(proof.pi_a[0]), BigInt(proof.pi_a[1])];
+    const b = [
+      [BigInt(proof.pi_b[0][1]), BigInt(proof.pi_b[0][0])],
+      [BigInt(proof.pi_b[1][1]), BigInt(proof.pi_b[1][0])],
+    ];
+    const c = [BigInt(proof.pi_c[0]), BigInt(proof.pi_c[1])];
+
+    // Call the verifyProof function of the verifier contract with the proof and public signals
+    const isValid = await verifier.verifyProof(a, b, c, publicSignals);
+    expect(isValid).to.be.false; // Check if the verification result is false
+  });
 });
 
 async function generateVoteCommitment() {
