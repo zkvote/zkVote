@@ -15,6 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Decrypt zkey file
+        run: |
+          mkdir -p keys
+          gpg --quiet --batch --yes --decrypt --passphrase="${{ secrets.ZKEY_PASSPHRASE }}" \
+            --output keys/voting_0001.zkey keys/voting_0001.zkey.gpg
+
       - name: Build Docker image
         run: docker build --build-arg ZKEY_PASSPHRASE=${{ secrets.ZKEY_PASSPHRASE }} -t zkvote:latest .
 

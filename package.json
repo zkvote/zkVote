@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "npx mocha tests/circuits/voting_circuit.test.js && npx hardhat test tests/contracts/verifier.test.js && npx hardhat test tests/contracts/votingManager.test.js"
+    "test": "npx mocha tests/circuits/voting_circuit.test.js && npx hardhat test"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,8 @@
   "homepage": "https://github.com/Cass402/zkVote#readme",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "hardhat": "^2.22.19"
+    "hardhat": "^2.22.19",
+    "solidity-coverage": "^0.8.14"
   },
   "dependencies": {
     "circomlibjs": "^0.1.7",

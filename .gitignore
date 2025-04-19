@@ -17,3 +17,5 @@ circuits/circomlib/
 tests/contracts/voting_input.json
 cache/
 artifacts/
+coverage/
+coverage.json

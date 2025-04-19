@@ -49,9 +49,11 @@ WORKDIR /app
 # Copy the contents of the current directory to the working directory
 COPY . .
 
-# Decrypt the secret key
-ARG ZKEY_PASSPHRASE
-RUN gpg --quiet --batch --yes --decrypt --passphrase="$ZKEY_PASSPHRASE" --output keys/voting_0001.zkey keys/voting_0001.zkey.gpg
+# Ensure the keys directory exists
+RUN mkdir -p /app/keys
+
+# Copy the keys directory from the host to the container
+COPY keys/voting_0001.zkey /app/keys/voting_0001.zkey
 
 # Start a bash shell when the container runs
 CMD ["/bin/bash"]
