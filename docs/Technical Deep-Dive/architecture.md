@@ -71,6 +71,24 @@ This document encompasses the full zkVote platform including the core cryptograp
 
 ### 3.1 High-Level Architecture
 
+```mermaid
+flowchart TB
+  SYS[“zkVote System”]
+  CP[“Core Protocol Layer”]
+  INT[“Integration Layer”]
+  CFG[“Configuration Layer”]
+  APP[“Application Layer”]
+  SYS --> CP
+  SYS --> INT
+  SYS --> CFG
+  SYS --> APP
+  click SYS call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L74")
+  click CP call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L76")
+  click INT call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L77")
+  click CFG call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L78")
+  click APP call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L79")
+```
+
 The system is composed of four main layers:
 
 - **Core Protocol Layer:** Implements zero-knowledge cryptographic primitives and the voting protocol.
