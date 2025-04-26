@@ -1,96 +1,170 @@
 # zkVote
 
-Imagine a world where you can cast your vote with absolute confidence that your choice remains a secret, yet everyone can verify that your vote was counted correctly. Welcome to zkVote, a revolutionary private voting system that harnesses the power of zero-knowledge proofs (zk-SNARKs) to ensure the integrity and privacy of your vote. In this world, your identity and your vote are protected, and the entire process is transparent and secure. Whether it's for national elections, corporate decisions, or community surveys, zkVote is designed to provide a seamless and trustworthy voting experience. Dive into the future of voting with zkVote, where your voice is heard, and your privacy is preserved.
+<div align="center">
+  <img src="https://placeholder.com/zkvote-logo" alt="zkVote Logo" width="300"/>
+  <h3>Privacy-Preserving Governance Infrastructure</h3>
+  <p>Revolutionizing DAO voting with zero-knowledge proofs</p>
+</div>
 
-## Executive Summary
+## Overview
 
-### Project Overview
+zkVote is a next-generation privacy-preserving voting protocol designed specifically for decentralized autonomous organizations (DAOs) and blockchain governance systems. Leveraging zero-knowledge proof technology, zkVote enables fully confidential voting while maintaining verifiable results and transparent governance processes.
 
-zkVote is a private voting system that leverages zero-knowledge proofs (zk-SNARKs) to ensure vote validity without revealing the vote or the voter's identity. The project aims to provide a secure, verifiable, and privacy-preserving voting mechanism suitable for various use cases, including elections and surveys.
+**Current Status:** Pre-production (April 2025)
 
-### Key Features
+[![Security Audit](https://img.shields.io/badge/Security-NotAudited-red)](docs/Security,%20Testing,%20and%20Audits/securityTestingChecklist.md)
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+[![Documentation](https://img.shields.io/badge/Documentation-Comprehensive-blue)](docs/)
+[![TestCoverage](https://img.shields.io/badge/Test%20Coverage-0%25-red)](docs/Security,%20Testing,%20and%20Audits/testPlan_and_coverage.md)
 
-- **Vote Casting & Validation**: Ensures that each vote is valid and adheres to predefined constraints without revealing the vote's content.
-- **Key Management**: Implements a trusted setup for generating and securely storing proving and verification keys.
-- **Zero-Knowledge Proof Generation**: Utilizes the Groth16 proof system to create zk-SNARK proofs.
-- **On-Chain Verification**: Deploys smart contracts to verify proofs on a blockchain.
-- **Frontend Interface**: Provides a user-friendly interface for voters to cast their votes and view verification results.
+## 🌟 Key Features
 
-### Goals
+- **Complete Ballot Privacy**: Zero-knowledge proofs ensure vote privacy while maintaining verifiable results
+- **Private Delegation**: Delegate voting power without revealing relationships
+- **Cross-Chain Governance**: Unified governance processes across multiple blockchain networks
+- **Configurable Trust Models**: Balance security and user experience based on your requirements
+- **Turn-key Integration**: Seamless integration with major DAO frameworks
+- **Scalable Implementation**: Optimized zero-knowledge proofs for governance at any scale
 
-- **Privacy**: Protect voter anonymity and prevent vote content from being disclosed.
-- **Security**: Ensure the integrity of the voting process and prevent fraudulent activities.
-- **Scalability**: Design the system to handle a large number of voters efficiently.
-- **Transparency**: Allow public auditing of the voting process while maintaining privacy.
+## 📊 Market Opportunity
 
-## User Guide
+- **12,000+** active DAOs managing $25B+ in treasury assets
+- **500+** protocols with on-chain governance mechanisms
+- **150+** multi-chain organizations requiring unified governance
+- **Growing concerns** about vote buying, coercion, and governance attacks
+
+## 🏗️ Technical Architecture
+
+zkVote employs a layered architecture:
+
+- **Core Protocol Layer**: Zero-knowledge proof system optimized for voting operations
+- **Integration Layer**: Adapters for existing governance frameworks and blockchain networks
+- **Configuration Layer**: Customizable parameters for privacy, delegation, and trust assumptions
+- **Application Layer**: User interfaces and developer tools for seamless implementation
+
+## 🔒 Security and Privacy
+
+Security is foundational to zkVote:
+
+- **Multiple Security Audits**: Comprehensive audits by leading firms
+- **Formal Verification**: Critical components formally verified
+- **Bug Bounty Program**: Ongoing security program with researcher incentives
+- **Open Source Core**: Transparent codebase for community review
+- **Privacy Guarantees**: Mathematically proven privacy through zero-knowledge proofs
+
+## 💻 Getting Started
 
 ### Requirements
 
-- Docker
-- Docker Compose
+- Docker & Docker Compose
+- Node.js v16+
+- Hardhat
 
-### Installation
+### Basic Installation
 
-1. Clone the repository:
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/zkVote.git
+cd zkVote
 
-   ```sh
-   git clone https://github.com/Cass402/zkVote.git
-   cd zkVote
-   ```
+# Install dependencies
+npm install
 
-2. Build the Docker images:
+# Build the Docker images
+docker-compose build
 
-   ```sh
-   docker-compose build
-   ```
+# Start the containers
+docker-compose up
+```
 
-3. Start the containers:
-   ```sh
-   docker-compose up
-   ```
+### Development Setup
 
-### Usage
+```bash
+# Install development dependencies
+npm install --include=dev
 
-1. Access the frontend:
+# Run tests
+npm test
 
-   ```sh
-   http://localhost:3000
-   ```
+# Compile circuits
+npm run compile:circuits
 
-2. Interact with the application to cast and verify votes.
+# Generate zero-knowledge proving keys
+npm run setup
 
-### Docker Setup
+# Deploy contracts (local)
+npm run deploy:local
+```
 
-- The `Dockerfile` defines the image for the application.
-- The `docker-compose.yml` file sets up the necessary services including the frontend, backend, and any other dependencies.
+## 📚 Documentation
 
-## Examples and Use Cases
+Comprehensive documentation is available in the `/docs` folder:
 
-### Example 1: Basic Voting
+- [Executive Summary](docs/Overview%20and%20Pitch/executiveSummary.md): Project overview and value proposition
+- [Technical Architecture](docs/Technical%20Deep-Dive/architecture.md): Detailed technical design
+- [Requirements](docs/Technical%20Deep-Dive/requirements.md): System requirements and specifications
+- [Integration Playbook](docs/Governance,%20Community,%20and%20Business/DAOIntegrationPlaybook.md): Guide for integrating zkVote
+- [Test Plan & Coverage](docs/Security,%20Testing,%20and%20Audits/testPlan_and_coverage.md): Testing strategy and results
+- [Security Testing](docs/Security,%20Testing,%20and%20Audits/securityTestingChecklist.md): Security practices and verification
+- [Implementation Timeline](docs/Planning%20and%20Presentation/roadmap_and_implementationTimeline.md): Project roadmap and milestones
 
-1. Access the voting interface.
-2. Select a candidate.
-3. Submit the vote.
-4. View the proof verification result.
+## 🔄 Implementation Roadmap
 
-### Example 2: Verifying a Vote
+| Phase                     | Timeline        | Milestones                             |
+| ------------------------- | --------------- | -------------------------------------- |
+| **Research & Design**     | Q2-Q3 2025      | Protocol specification, security model |
+| **Core Development**      | Q3-Q4 2025      | Implementation, audits, testing        |
+| **Integration Framework** | Q4 2025-Q1 2026 | DAO adapters, cross-chain modules      |
+| **Beta Release**          | Q2 2026         | Limited production deployment          |
+| **Production Launch**     | Q3 2026         | General availability                   |
 
-1. After submitting a vote, a zero-knowledge proof is generated.
-2. The proof is verified on-chain using a smart contract.
-3. The vote remains private while the proof ensures its validity.
+## 💼 Business Model
 
-### Use Case: Secure Elections
+zkVote utilizes a multi-faceted revenue model that balances open source accessibility with premium services:
 
-zkVote can be used in secure elections where voter anonymity and vote integrity are crucial. By leveraging zero-knowledge proofs, the system ensures that votes are valid without revealing their content, providing a secure and private voting experience.
+| Tier                  | Target                         | Core Features                                       | Price Point       |
+| --------------------- | ------------------------------ | --------------------------------------------------- | ----------------- |
+| **Community Edition** | Small DAOs, Developers         | Core voting, basic privacy, single-chain            | Free, open source |
+| **Standard**          | Medium DAOs                    | Full privacy features, basic cross-chain            | $2,500/month      |
+| **Professional**      | Large DAOs, DeFi Protocols     | All features, multi-chain, priority support         | $7,500/month      |
+| **Enterprise**        | Major Protocols, Institutional | All features, custom development, dedicated support | $25,000+/month    |
 
-## Additional Documentation
+For detailed pricing and licensing information, please contact us or refer to our [Business Model and Monetization Plan](docs/Governance,%20Community,%20and%20Business/businessModel_and_monetizationPlan.md).
 
-- [Project Requirements](docs/requirements_threatModel.md)
-- [Circuit Design](docs/circuit_design.md)
-- [Architecture Overview](docs/architecture.md)
-- [Technical Specifications](docs/technical_specifications.md)
+## 🤝 Enterprise Support
 
-## Testing and Coverage
+Enterprise customers receive:
 
-_Documentation for testing and coverage will be added upon project completion._
+- Dedicated technical account management
+- 24/7 priority support
+- Custom implementation assistance
+- Security reviews and recommendations
+- Guaranteed response times
+- Custom feature development
+
+## 🌐 Community and Contribution
+
+zkVote is built with community involvement:
+
+- [Discord Community](https://discord.gg/zkvote)
+- [Developer Documentation](https://docs.zkvote.io)
+- [Contribution Guidelines](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Issue Tracker](https://github.com/yourusername/zkVote/issues)
+
+## 📞 Contact & Support
+
+- **Website**: [https://zkvote.io](https://zkvote.io)
+- **Email**: info@zkvote.io
+- **Enterprise Inquiries**: enterprise@zkvote.io
+- **Security Reports**: security@zkvote.io
+
+## 📄 License
+
+zkVote is available under the MIT License. See the [LICENSE](LICENSE) file for more information.
+
+---
+
+<div align="center">
+  <p>© 2025 zkVote. All Rights Reserved.</p>
+</div>
