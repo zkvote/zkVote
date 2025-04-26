@@ -93,39 +93,34 @@ Specialized components for each supported blockchain network:
 
 ### 2.3 Architecture Diagram
 
-```
-+------------------+       +------------------+       +------------------+
-| Chain A          |       | Chain B          |       | Chain C          |
-|                  |       |                  |       |                  |
-| +-------------+  |       | +-------------+  |       | +-------------+  |
-| | zkVote Core |<-----+---->| zkVote Core |<-----+---->| zkVote Core |  |
-| +-------------+  |    |  | +-------------+  |    |  | +-------------+  |
-|        |         |    |  |        |         |    |  |        |         |
-| +-------------+  |    |  | +-------------+  |    |  | +-------------+  |
-| | Bridge      |<--------->| Bridge      |<--------->| Bridge      |  |
-| | Contract    |  |    |  | | Contract    |  |    |  | | Contract    |  |
-| +-------------+  |    |  | +-------------+  |    |  | +-------------+  |
-|        |         |    |  |        |         |    |  |        |         |
-+------- | --------+    |  +------- | --------+    |  +------- | --------+
-         |              |           |              |           |
-         v              |           v              |           v
-+------------------+    |  +------------------+    |  +------------------+
-| Chain A State    |    +->| Chain B State    |    +->| Chain C State    |
-|                  |       |                  |       |                  |
-| - Vote Registry  |       | - Vote Registry  |       | - Vote Registry  |
-| - Proof Repo     |       | - Proof Repo     |       | - Proof Repo     |
-| - Results        |       | - Results        |       | - Results        |
-+------------------+       +------------------+       +------------------+
-         |                          |                          |
-         |                          v                          |
-         |                 +------------------+                |
-         +---------------->| Aggregated       |<---------------+
-                           | Results          |
-                           |                  |
-                           | - Final Tallies  |
-                           | - Outcome Proofs |
-                           | - Execution Auth |
-                           +------------------+
+```mermaid
+flowchart LR
+  subgraph ChainA["Chain A"]
+    ACore["zkVote Core"]
+    ABridge["Bridge Contract"]
+  end
+  subgraph ChainB["Chain B"]
+    BCore["zkVote Core"]
+    BBridge["Bridge Contract"]
+  end
+  subgraph ChainC["Chain C"]
+    CCore["zkVote Core"]
+    CBridge["Bridge Contract"]
+  end
+
+  ACore --- BCore
+  BCore --- CCore
+
+  ABridge --- BBridge
+  BBridge --- CBridge
+
+  ABridge --> AState["Chain A State\n- Vote Registry\n- Proof Repo\n- Results"]
+  BBridge --> BState["Chain B State\n- Vote Registry\n- Proof Repo\n- Results"]
+  CBridge --> CState["Chain C State\n- Vote Registry\n- Proof Repo\n- Results"]
+
+  AState --> Aggregated["Aggregated Results\n- Final Tallies\n- Outcome Proofs\n- Execution Auth"]
+  BState --> Aggregated
+  CState --> Aggregated
 ```
 
 ### 2.4 Key Subsystems

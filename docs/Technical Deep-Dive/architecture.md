@@ -106,6 +106,22 @@ The system is composed of four main layers:
 
 ### 3.3 Key Workflows
 
+```mermaid
+flowchart TD
+  VC["Vote Creation"] --> VR["Voter Registration"]
+  VR --> D["Delegation"]
+  D --> VCAST["Vote Casting"]
+  VCAST --> VT["Vote Tallying"]
+  VT --> RV["Result Verification"]
+
+  click VC call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L108")
+  click VR call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L109")
+  click D call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L110")
+  click VCAST call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L111")
+  click VT call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L112")
+  click RV call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L113")
+```
+
 - **Vote Creation:** Establishing voting parameters and eligibility criteria.
 - **Voter Registration:** Cryptographic verification of voter eligibility.
 - **Delegation:** Private transfer of voting authority.
@@ -116,6 +132,77 @@ The system is composed of four main layers:
 ---
 
 ## 4. Component Architecture
+
+```mermaid
+classDiagram
+    class CoreProtocolLayer
+    class ZeroKnowledgeProofEngine
+    class VotingProtocolModule
+    class DelegationManagementModule
+    class CryptographicCommitmentManager
+    class TallyProcessor
+
+    class IntegrationLayer
+    class BlockchainAdapters
+    class GovernanceFrameworkAdapters
+    class IdentityProviderIntegrations
+    class CrossChainBridge
+
+    class ConfigurationLayer
+    class ParameterManagementModule
+    class TrustModelConfigurator
+    class PrivacyPolicyEngine
+
+    class ApplicationLayer
+    class VoterInterface
+    class AdministrativeInterface
+    class DeveloperSDK
+    class AnalyticsModule
+
+    CoreProtocolLayer <|-- ZeroKnowledgeProofEngine
+    CoreProtocolLayer <|-- VotingProtocolModule
+    CoreProtocolLayer <|-- DelegationManagementModule
+    CoreProtocolLayer <|-- CryptographicCommitmentManager
+    CoreProtocolLayer <|-- TallyProcessor
+
+    IntegrationLayer <|-- BlockchainAdapters
+    IntegrationLayer <|-- GovernanceFrameworkAdapters
+    IntegrationLayer <|-- IdentityProviderIntegrations
+    IntegrationLayer <|-- CrossChainBridge
+
+    ConfigurationLayer <|-- ParameterManagementModule
+    ConfigurationLayer <|-- TrustModelConfigurator
+    ConfigurationLayer <|-- PrivacyPolicyEngine
+
+    ApplicationLayer <|-- VoterInterface
+    ApplicationLayer <|-- AdministrativeInterface
+    ApplicationLayer <|-- DeveloperSDK
+    ApplicationLayer <|-- AnalyticsModule
+
+    click CoreProtocolLayer call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L136")
+    click ZeroKnowledgeProofEngine call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L138")
+    click VotingProtocolModule call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L142")
+    click DelegationManagementModule call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L146")
+    click CryptographicCommitmentManager call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L150")
+    click TallyProcessor call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L155")
+
+    click IntegrationLayer call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L159")
+    click BlockchainAdapters call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L160")
+    click GovernanceFrameworkAdapters call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L164")
+    click IdentityProviderIntegrations call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L168")
+    click CrossChainBridge call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L173")
+
+    click ConfigurationLayer call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L178")
+    click ParameterManagementModule call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L180")
+    click TrustModelConfigurator call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L183")
+    click PrivacyPolicyEngine call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L186")
+
+    click ApplicationLayer call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L190")
+    click VoterInterface call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L192")
+    click AdministrativeInterface call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L195")
+    click DeveloperSDK call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L198")
+    click AnalyticsModule call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L201")
+```
 
 ### 4.1 Core Protocol Components
 
@@ -244,12 +331,41 @@ The system is composed of four main layers:
 
 #### Vote Creation Flow
 
+```mermaid
+flowchart LR
+  Admin["Administrator"] --> PM[ParameterManagementModule]
+  PM --> CCM[CryptographicCommitmentManager]
+  CCM --> BA[BlockchainAdapters]
+  BA --> VPM[VotingProtocolModule]
+
+  click Admin call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L331")
+  click PM call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L180")
+  click CCM call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L150")
+  click BA call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L160")
+  click VPM call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L142")
+```
+
 1. Administrator configures voting parameters.
 2. The system generates cryptographic commitments.
 3. A vote instance is published on-chain.
 4. Eligibility criteria are established.
 
 #### Vote Casting Flow
+
+```mermaid
+flowchart LR
+  Voter["Voter"] --> ProveEligibility["Proves Eligibility"]
+  ProveEligibility --> SystemVerification["Verifies Eligibility"]
+  SystemVerification --> EncryptBallot["Encrypts Ballot"]
+  EncryptBallot --> GenerateProofs["Generates ZK Proofs"]
+  GenerateProofs --> SubmitProofs["Submits Encrypted Ballot & Proofs"]
+
+  click ProveEligibility call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L354")
+  click SystemVerification call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L355")
+  click EncryptBallot call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L356")
+  click GenerateProofs call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L357")
+  click SubmitProofs call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L358")
+```
 
 1. The voter proves eligibility.
 2. The system verifies eligibility cryptographically.
@@ -258,6 +374,23 @@ The system is composed of four main layers:
 5. The encrypted ballot and proofs are submitted.
 
 #### Result Tallying Flow
+
+```mermaid
+flowchart LR
+  T1["Tallying is triggered"]
+  T2["Aggregates encrypted votes"]
+  T3["Generates cryptographic proofs of correctness"]
+  T4["Publishes results with verification proofs"]
+
+  T1 --> T2
+  T2 --> T3
+  T3 --> T4
+
+  click T1 call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L377")
+  click T2 call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L378")
+  click T3 call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L379")
+  click T4 call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L380")
+```
 
 1. Tallying is triggered.
 2. The system aggregates encrypted votes.
@@ -303,6 +436,23 @@ Security measures address:
 
 ### 6.3 Security Architecture Diagram
 
+```mermaid
+flowchart TB
+  subgraph SecurityArchitecture["Security Architecture Layers"]
+    direction TB
+    Perimeter["Perimeter Security"]
+    Application["Application Security"]
+    Protocol["Protocol Security"]
+    Data["Data Security"]
+    Operational["Operational Security"]
+  end
+  click Perimeter call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L441")
+  click Application call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L442")
+  click Protocol call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L443")
+  click Data call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L444")
+  click Operational call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md#L445")
+```
+
 The diagram illustrates a layered security approach:
 
 - **Perimeter Security:** Defends against external threats.
@@ -335,6 +485,49 @@ The system exposes its functionality through multiple APIs:
 
 ### 7.3 Integration Reference Architecture
 
+```mermaid
+flowchart LR
+  subgraph IntegrationLayer["Integration Layer"]
+    CPAPI["Core Protocol API"]
+    GOVAPI["Governance API"]
+    INTAPI["Integration API"]
+    DEVAPI["Developer API"]
+    BA["Blockchain Adapters"]
+    GFA["Governance Framework Adapters"]
+    IDP["Identity Provider Integrations"]
+    XCB["Cross-Chain Bridge"]
+  end
+
+  subgraph ExternalSystems["External Systems"]
+    DAOFW["DAO Frameworks"]
+    BCN["Blockchain Networks"]
+    IDPSYS["Identity Providers"]
+    ANLS["Analytics Services"]
+    TRES["Treasury Services"]
+    CLIENT["Client Applications"]
+  end
+
+  IntegrationLayer --> CPAPI
+  IntegrationLayer --> GOVAPI
+  IntegrationLayer --> INTAPI
+  IntegrationLayer --> DEVAPI
+  IntegrationLayer --> BA
+  IntegrationLayer --> GFA
+  IntegrationLayer --> IDP
+  IntegrationLayer --> XCB
+
+  CPAPI --> BCN
+  GOVAPI --> DAOFW
+  INTAPI --> DAOFW
+  DEVAPI --> CLIENT
+  BA --> BCN
+  GFA --> DAOFW
+  IDP --> IDPSYS
+  XCB --> BCN
+
+  click IntegrationLayer call linkCallback("/Users/srivan/Documents/Projects/ZKP/zkVote/docs/Technical Deep-Dive/architecture.md")
+```
+
 Illustrates:
 
 - Interfaces with major DAO frameworks.
@@ -366,6 +559,37 @@ Includes:
 - **Supporting Services:** Analytics, monitoring, and logging systems.
 
 ### 8.3 Deployment Reference Architecture
+
+```mermaid
+flowchart TB
+  subgraph OnChain["On‑Chain Components"]
+    SC[Smart Contracts]
+  end
+  subgraph OffChain["Off‑Chain Services"]
+    CN[Coordinator Nodes]
+    SS[Supporting Services]
+  end
+  subgraph Client["Client Applications"]
+    CA[Client Apps]
+  end
+  subgraph Network["Network Zones"]
+    PI[Public Internet]
+    PV[Private Network]
+  end
+  subgraph DevTools["Developer Tools"]
+    DT[SDKs & CLIs]
+  end
+
+  PI --> CA
+  CA --> PI
+  CA --> SC
+  SC --> CN
+  CN --> SS
+  CN --> PV
+  SS --> PV
+  DT --> SC
+  DT --> SS
+```
 
 - On-chain component deployment.
 - Off-chain service architecture.
@@ -441,6 +665,20 @@ Includes:
 - Implementing unified governance across scaling environments.
 
 ### 10.3 Scalability Roadmap
+
+```mermaid
+gantt
+    title Scalability Roadmap
+    dateFormat  YYYY-MM
+    section Phase 1 – Core Protocol
+      Core Protocol Optimizations      :done,    phase1, 2025-01, 2m
+    section Phase 2 – Proof Aggregation
+      Aggregation Techniques           :active,  phase2, after phase1, 2m
+    section Phase 3 – Layer 2 Scaling
+      Integrate Layer 2 Solutions      :         phase3, after phase2, 2m
+    section Phase 4 – Cross‑Chain Scaling
+      Cross‑Chain Scaling Capabilities :         phase4, after phase3, 2m
+```
 
 - **Phase 1:** Core protocol optimizations.
 - **Phase 2:** Implement proof aggregation techniques.
