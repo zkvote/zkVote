@@ -1,7 +1,9 @@
 # zkVote System Requirements Document
 
-**Document ID:** ZKV-SRD-2025-001  
-**Version:** 1.0
+**Document ID:** ZKV-SRD-2025-002  
+**Version:** 1.1  
+**Last Updated:** 2025-05-16 06:19:45  
+**Prepared By:** Cass402
 
 ---
 
@@ -9,6 +11,10 @@
 
 - [1. Introduction](#1-introduction)
 - [2. System Overview](#2-system-overview)
+  - [2.1 System Description](#21-system-description)
+  - [2.2 Context and Background](#22-context-and-background)
+  - [2.3 System Components](#23-system-components)
+  - [2.4 User Classes and Characteristics](#24-user-classes-and-characteristics)
 - [3. Functional Requirements](#3-functional-requirements)
   - [3.1 Core Protocol Requirements](#31-core-protocol-requirements)
   - [3.2 Delegation Requirements](#32-delegation-requirements)
@@ -43,20 +49,27 @@
   - [8.1 Response Time](#81-response-time)
   - [8.2 Scalability](#82-scalability)
   - [8.3 Resource Utilization](#83-resource-utilization)
+  - [8.4 Interoperability Standards](#84-interoperability-standards)
 - [9. Deployment Requirements](#9-deployment-requirements)
   - [9.1 Installation Requirements](#91-installation-requirements)
   - [9.2 Compatibility Requirements](#92-compatibility-requirements)
   - [9.3 Configuration Requirements](#93-configuration-requirements)
+  - [9.4 Development Environment Requirements](#94-development-environment-requirements)
 - [10. Testing Requirements](#10-testing-requirements)
   - [10.1 Unit Testing](#101-unit-testing)
   - [10.2 Integration Testing](#102-integration-testing)
   - [10.3 Security Testing](#103-security-testing)
   - [10.4 Performance Testing](#104-performance-testing)
+  - [10.5 Solidity-Native Testing](#105-solidity-native-testing)
 - [11. Documentation Requirements](#11-documentation-requirements)
   - [11.1 User Documentation](#111-user-documentation)
   - [11.2 Developer Documentation](#112-developer-documentation)
   - [11.3 Technical Documentation](#113-technical-documentation)
-- [12. Glossary](#12-glossary)
+- [12. Compliance and Governance](#12-compliance-and-governance)
+  - [12.1 Regulatory Compliance](#121-regulatory-compliance)
+  - [12.2 Governance Automation](#122-governance-automation)
+  - [12.3 Data Privacy Requirements](#123-data-privacy-requirements)
+- [13. Glossary](#13-glossary)
 
 ---
 
@@ -81,8 +94,11 @@ Encompasses all functional and non-functional requirements, including core crypt
 ### 1.4 References
 
 - zkVote Project Overview (Document ID: ZKV-EXEC-2025-001)
-- zkVote Technical Architecture Specification (Document ID: ZKV-ARCH-2025-001)
+- zkVote Technical Architecture Specification (Document ID: ZKV-ARCH-2025-002)
 - Zero-Knowledge Proof Security Standards (ISO/IEC 29128)
+- EIP-712: Ethereum Typed Structured Data Hashing and Signing
+- NIST Post-Quantum Cryptography Standards
+- FATF Travel Rule Technical Compliance Guidelines
 
 ---
 
@@ -91,6 +107,26 @@ Encompasses all functional and non-functional requirements, including core crypt
 ### 2.1 System Description
 
 zkVote is a next-generation protocol that enables anonymous yet verifiable voting. It offers configurable privacy, supports cross-chain operations, and includes features such as private delegation and customizable result revelation.
+
+#### 2.1.1 Core Capabilities
+
+- Privacy-preserving voting with zero-knowledge proofs
+- Verifiable vote tallying without revealing individual votes
+- Cross-chain governance coordination
+- Configurable trust and privacy models
+
+#### 2.1.2 System Boundaries
+
+- Voting protocol and cryptographic mechanisms
+- Integration interfaces for blockchain networks
+- Administrator and voter interfaces
+- Data storage and verification systems
+
+#### 2.1.3 Development Tooling
+
+- **Hardhat 3.0+**: Required for Solidity test support and multichain deployments
+- **Node.js v22+**: ES module support for TypeScript-first development
+- **Rust Toolchain**: Required for performance-critical components
 
 ### 2.2 Context and Background
 
@@ -102,6 +138,8 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 - **Integration Layer**
 - **Configuration Layer**
 - **Application Layer**
+- **Security Layer**
+- **Data Availability Layer**
 
 ### 2.4 User Classes and Characteristics
 
@@ -126,6 +164,7 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | FR-1.5 | Generate cryptographic proofs of correct execution for all voting processes             | High     | Proposed |
 | FR-1.6 | Support vote weight calculation based on token holdings or other verifiable credentials | High     | Proposed |
 | FR-1.7 | Prevent double-voting through cryptographic mechanisms                                  | High     | Proposed |
+| FR-1.8 | Implement proof aggregation for batch verification of multiple votes                    | High     | Proposed |
 
 ### 3.2 Delegation Requirements
 
@@ -137,6 +176,12 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | FR-2.4 | Allow delegators to reclaim delegated voting power anytime before vote casting        | High     | Proposed |
 | FR-2.5 | Provide mechanisms for delegation expiration or time-based constraints                | Medium   | Proposed |
 | FR-2.6 | Support topic-specific delegation based on proposal categories                        | Low      | Proposed |
+
+#### 3.2.1 Language Standards
+
+- **Solidity 1.0.0**: Enforce custom error types over string messages
+- **Transient Storage**: Mandate `tstore/tload` for temporary state
+- **IR Optimizations**: Require Yul IR compilation flags
 
 ### 3.3 Configuration Requirements
 
@@ -158,6 +203,15 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | FR-4.3 | Enable results finality and cryptographic verification across chains           | High     | Proposed |
 | FR-4.4 | Support atomic execution of governance decisions across multiple chains        | Medium   | Proposed |
 | FR-4.5 | Maintain consistent privacy guarantees regardless of the underlying blockchain | High     | Proposed |
+| FR-4.6 | Provide standardized bridge interface for cross-chain message passing          | High     | Proposed |
+
+#### 3.4.1 Signature Requirements
+
+$$ \text{Sig}\_{\text{EIP-712}} = \text{keccak256}(\text{0x1901} \parallel \text{DomainSeparator} \parallel \text{hashStruct}(\text{Message})) $$
+
+- Human-readable signature verification
+- Domain separation for replay protection
+- Typed data hashing for structured inputs
 
 ### 3.5 Integration Requirements
 
@@ -234,6 +288,12 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | NFR-5.4 | Provide configuration wizards for governance administrators           | Medium   | Proposed |
 | NFR-5.5 | Maintain an average user satisfaction rating of 4.0/5.0 or higher     | Medium   | Proposed |
 
+#### 4.5.1 Cryptographic Material
+
+- **AWS CloudHSM**: Quarterly key rotation with FROST v2
+- **Ephemeral Secrets**: TEE-backed temporary credentials
+- **Encrypted Configs**: Age-encrypted environment variables
+
 ### 4.6 Compliance Requirements
 
 | ID      | Requirement                                                           | Priority | Status   |
@@ -243,6 +303,7 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | NFR-6.3 | Provide configurable options for jurisdictional compliance            | Medium   | Proposed |
 | NFR-6.4 | Maintain comprehensive audit logs while preserving privacy guarantees | High     | Proposed |
 | NFR-6.5 | Implement standards-compliant key management practices                | High     | Proposed |
+| NFR-6.6 | Support FATF Travel Rule compliance for relevant operations           | High     | Proposed |
 
 ---
 
@@ -268,6 +329,7 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | TR-2.4 | Provide upgrade mechanisms with appropriate governance controls                        | Medium   | Proposed |
 | TR-2.5 | Implement standard security patterns (Checks-Effects-Interactions, re-entrancy guards) | High     | Proposed |
 | TR-2.6 | Support multiple blockchain environments via adapter patterns                          | High     | Proposed |
+| TR-2.7 | Use Solidity 1.0.0 features including custom error types and optimized storage access  | High     | Proposed |
 
 ### 5.3 Client Library Requirements
 
@@ -288,6 +350,12 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | TR-4.3 | Maintain cryptographic commitments to all system states                  | High     | Proposed |
 | TR-4.4 | Support data availability guarantees via multiple persistence mechanisms | Medium   | Proposed |
 | TR-4.5 | Implement appropriate data expiration policies                           | Medium   | Proposed |
+
+#### 5.4.2 Decentralized Storage
+
+- **IPFS Pinning**: Minimum 3 geo-distributed pinning services
+- **Time-Based ACL**: Smart contract enforced access windows
+- **Content Addressing**: CIDv1 with base32 encoding
 
 ### 5.5 API Requirements
 
@@ -313,6 +381,7 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | SR-1.3 | Implement secure random number generation                                | High     | Proposed |
 | SR-1.4 | Use standardized and audited cryptographic libraries                     | High     | Proposed |
 | SR-1.5 | Implement defense in depth for critical cryptographic operations         | High     | Proposed |
+| SR-1.6 | Support EIP-712 structured data signing for all user authentication      | High     | Proposed |
 
 ### 6.2 Access Control Requirements
 
@@ -324,6 +393,12 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | SR-2.4 | Provide multi-signature requirements for critical operations     | Medium   | Proposed |
 | SR-2.5 | Maintain comprehensive access logs for administrative actions    | Medium   | Proposed |
 
+#### 6.2.4 Container Security
+
+- **Pod Security Policies**: enforce readOnlyRootFilesystem
+- **Network Policies**: default-deny ingress/egress
+- **Runtime Monitoring**: eBPF-based anomaly detection
+
 ### 6.3 Threat Mitigation Requirements
 
 | ID     | Requirement                                                         | Priority | Status   |
@@ -334,6 +409,7 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | SR-3.4 | Mitigate denial-of-service risk through appropriate rate limiting   | Medium   | Proposed |
 | SR-3.5 | Implement countermeasures against known ZK-specific vulnerabilities | High     | Proposed |
 | SR-3.6 | Protect against chain reorganization attacks                        | Medium   | Proposed |
+| SR-3.7 | Implement runtime monitoring and anomaly detection                  | High     | Proposed |
 
 ### 6.4 Audit Requirements
 
@@ -359,6 +435,20 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | IR-1.4 | Support OpenZeppelin Governor standard             | Medium   | Proposed |
 | IR-1.5 | Provide extension points for custom DAO frameworks | Medium   | Proposed |
 
+#### 7.1.1 Test Framework Requirements
+
+```solidity
+contract TestVoting {
+  function test_ProposalCreation() public {
+    vm.prank(admin);
+    assertTrue(voting.createProposal("Upgrade"));
+  }
+}
+```
+
+- 100% branch coverage for critical pathways
+- Fuzz testing with 10k+ iterations per invariant
+
 ### 7.2 Blockchain Integration
 
 | ID     | Requirement                                                            | Priority | Status   |
@@ -368,6 +458,7 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | IR-2.3 | Support deployment on Polygon                                          | High     | Proposed |
 | IR-2.4 | Support deployment on Solana                                           | Medium   | Proposed |
 | IR-2.5 | Implement a modular architecture for supporting additional blockchains | Medium   | Proposed |
+| IR-2.6 | Support Arbitrum Nova with optimized proof generation                  | High     | Proposed |
 
 ### 7.3 Identity Integration
 
@@ -387,6 +478,7 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | IR-4.2 | Support data export in standardized formats                 | Medium   | Proposed |
 | IR-4.3 | Implement standardized interfaces for analytics integration | Low      | Proposed |
 | IR-4.4 | Provide integration with treasury management systems        | Medium   | Proposed |
+| IR-4.5 | Support integration with OFAC API for compliance checking   | High     | Proposed |
 
 ---
 
@@ -422,6 +514,16 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | PR-3.4 | Implement efficient data structures to minimize storage requirements    | Medium   | Proposed |
 | PR-3.5 | Optimize network bandwidth consumption for mobile users                 | Medium   | Proposed |
 
+### 8.4 Interoperability Standards
+
+| Chain    | Testnet       | Bridge Protocol |
+| -------- | ------------- | --------------- |
+| Ethereum | Holesky       | CCIP            |
+| Arbitrum | Nova          | Hyperlane       |
+| Polygon  | zkEVM Cardona | IBC             |
+| Optimism | Sepolia       | LayerZero       |
+| Solana   | Devnet        | Wormhole        |
+
 ---
 
 ## 9. Deployment Requirements
@@ -455,6 +557,17 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | DR-3.3 | Provide configuration validation tools                        | Medium   | Proposed |
 | DR-3.4 | Implement reasonable defaults for all configurable parameters | Medium   | Proposed |
 | DR-3.5 | Provide configuration templates for common scenarios          | Medium   | Proposed |
+
+### 9.4 Development Environment Requirements
+
+| ID     | Requirement                                                            | Priority | Status   |
+| ------ | ---------------------------------------------------------------------- | -------- | -------- |
+| DR-4.1 | Support Hardhat 3.0+ for smart contract development and testing        | High     | Proposed |
+| DR-4.2 | Require Node.js v22+ for ES module and modern JavaScript support       | High     | Proposed |
+| DR-4.3 | Implement Rust toolchain for performance-critical components           | High     | Proposed |
+| DR-4.4 | Provide Docker development environment with pre-configured tools       | Medium   | Proposed |
+| DR-4.5 | Support both local and cloud-based development workflows               | Medium   | Proposed |
+| DR-4.6 | Implement comprehensive linting and static analysis in CI/CD pipelines | High     | Proposed |
 
 ---
 
@@ -500,6 +613,16 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | TR-4.4 | Validate response times meet specified requirements                   | High     | Proposed |
 | TR-4.5 | Benchmark proof generation performance across hardware configurations | Medium   | Proposed |
 
+### 10.5 Solidity-Native Testing
+
+| ID     | Requirement                                                                | Priority | Status   |
+| ------ | -------------------------------------------------------------------------- | -------- | -------- |
+| TR-5.1 | Implement Solidity-native test framework for contract verification         | High     | Proposed |
+| TR-5.2 | Achieve 100% branch coverage for critical smart contract components        | High     | Proposed |
+| TR-5.3 | Implement fuzzing tests with minimum 10,000 iterations per invariant       | High     | Proposed |
+| TR-5.4 | Test contract behavior under realistic network conditions (gas, latency)   | Medium   | Proposed |
+| TR-5.5 | Verify correctness of contract state transitions through property checking | High     | Proposed |
+
 ---
 
 ## 11. Documentation Requirements
@@ -536,7 +659,47 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 
 ---
 
-## 12. Glossary
+## 12. Compliance and Governance
+
+### 12.1 Regulatory Compliance
+
+| ID     | Requirement                                                       | Priority | Status   |
+| ------ | ----------------------------------------------------------------- | -------- | -------- |
+| CG-1.1 | Ensure compliance with NIST cryptographic standards               | High     | Proposed |
+| CG-1.2 | Implement data handling practices consistent with GDPR principles | High     | Proposed |
+| CG-1.3 | Support FATF Travel Rule compliance for applicable operations     | High     | Proposed |
+| CG-1.4 | Implement record-keeping capabilities for regulatory requirements | Medium   | Proposed |
+| CG-1.5 | Provide configurable jurisdiction-specific compliance settings    | Medium   | Proposed |
+
+### 12.2 Governance Automation
+
+#### 12.2.1 Governance Checks
+
+- **Sanction Screening**: OFAC API integration
+- **Travel Rule**: FATF-compliant transaction metadata
+- **GDPR Redaction**: Merkle proof-based deletion
+
+| ID     | Requirement                                                       | Priority | Status   |
+| ------ | ----------------------------------------------------------------- | -------- | -------- |
+| CG-2.1 | Implement automated regulatory compliance checking                | High     | Proposed |
+| CG-2.2 | Support programmable governance policy enforcement                | Medium   | Proposed |
+| CG-2.3 | Provide audit trail for governance decisions                      | High     | Proposed |
+| CG-2.4 | Implement time-locked execution for governance actions            | High     | Proposed |
+| CG-2.5 | Support multiple governance frameworks with configurable rulesets | Medium   | Proposed |
+
+### 12.3 Data Privacy Requirements
+
+| ID     | Requirement                                                          | Priority | Status   |
+| ------ | -------------------------------------------------------------------- | -------- | -------- |
+| CG-3.1 | Implement right-to-be-forgotten capabilities with privacy guarantees | High     | Proposed |
+| CG-3.2 | Ensure data minimization across all system operations                | High     | Proposed |
+| CG-3.3 | Implement privacy-preserving analytics                               | Medium   | Proposed |
+| CG-3.4 | Provide configurable data retention policies                         | High     | Proposed |
+| CG-3.5 | Support selective disclosure for regulatory compliance               | Medium   | Proposed |
+
+---
+
+## 13. Glossary
 
 | Term                 | Definition                                                                                              |
 | -------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -550,3 +713,12 @@ Traditional blockchain governance exposes voting records publicly, increasing ri
 | MEV                  | Maximal Extractable Value – value extracted from blockchain transactions through advantageous ordering  |
 | Layer 2              | Scaling solutions built on top of existing blockchain networks                                          |
 | Sybil Attack         | An attack where one entity controls multiple identities                                                 |
+| EIP-712              | Ethereum Improvement Proposal for typed structured data hashing and signing                             |
+| FROST                | Flexible Round-Optimized Schnorr Threshold signature scheme                                             |
+| TEE                  | Trusted Execution Environment - secure area of a processor                                              |
+| eBPF                 | Extended Berkeley Packet Filter - Linux kernel technology for secure monitoring                         |
+| IPFS                 | InterPlanetary File System - distributed file system                                                    |
+| FATF                 | Financial Action Task Force - global money laundering and terrorist financing watchdog                  |
+| OFAC                 | Office of Foreign Assets Control - US Treasury department enforcing economic sanctions                  |
+| GDPR                 | General Data Protection Regulation - EU regulation on data protection and privacy                       |
+| CCIP                 | Cross-Chain Interoperability Protocol - blockchain messaging protocol                                   |
