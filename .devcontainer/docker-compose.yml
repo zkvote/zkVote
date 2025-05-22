@@ -1,0 +1,32 @@
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: docker/dev/dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - node_modules:/workspace/node_modules
+      - frontend_node_modules:/workspace/frontend/node_modules
+      - backend_node_modules:/workspace/backend/node_modules
+      - contracts_node_modules:/workspace/contracts/node_modules
+      - circuits_node_modules:/workspace/circuits/node_modules
+      - bridge_node_modules:/workspace/bridge/node_modules
+      - ~/.ssh:/home/node/.ssh:ro
+      - ~/.gitconfig:/home/node/.gitconfig:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - NODE_ENV=development
+      - PQC_ENABLED=true
+      - INFURA_API_KEY
+      - ALCHEMY_API_KEY
+      - ETHERSCAN_API_KEY
+    command: sleep infinity
+    user: node
+
+  volumes:
+    node_modules:
+    frontend_node_modules:
+    backend_node_modules:
+    contracts_node_modules:
+    circuits_node_modules:
+    bridge_node_modules:

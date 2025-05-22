@@ -2,4 +2,3 @@ keys/
 package-lock.json
 node_modules/
 .qodo/
-.vscode
