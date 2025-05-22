@@ -1,0 +1,65 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "editor.rulers": [100],
+  "editor.tabSize": 2,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "solidity.compileUsingRemoteVersion": "v0.8.30+commit.ab55807c",
+  "solidity.formatter": "prettier",
+  "solidity.linter": "solhint",
+  "solidity.enabledAsYouTypeCompilationErrorCheck": true,
+  "circom.binaryPath": "${workspaceFolder}/node_modules/.bin/circom",
+  "circom.includePaths": ["${workspaceFolder}/circuits/include"],
+  "[solidity]": {
+    "editor.defaultFormatter": "JuanBlanco.solidity"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+  },
+  "remote.containers.defaultExtensions": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "juanblanco.solidity",
+    "github.copilot"
+  ],
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "git.autofetch": true,
+  "cSpell.words": [
+    "circom",
+    "devcontainer",
+    "hardhat",
+    "zkproof",
+    "zksnark",
+    "zkvote",
+    "solhint",
+    "kubernetes",
+    "kubectl",
+    "kubeconfig",
+    "etherscan",
+    "alchemy",
+    "infura",
+    "ganache",
+    "sepolia",
+    "typechain",
+    "postquantum",
+    "dilithium",
+    "kyber"
+  ]
+}

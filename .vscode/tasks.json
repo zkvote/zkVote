@@ -1,0 +1,70 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-backend",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/backend && npm run build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+
+    {
+      "label": "build-frontend",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/frontend && npm run build"
+    },
+
+    {
+      "label": "build-bridge",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/bridge && npm run build"
+    },
+
+    {
+      "label": "compile-contracts",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/backend && npx hardhat compile"
+    },
+
+    {
+      "label": "start-dev-environment",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "stop-dev-environment",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yml -f docker-compose.dev.yml down",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "run-tests",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.yml -f docker-compose.test.yml up --abort-on-container-exit",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+
+    {
+      "label": "generate-k8s-manifests",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/k8s && ./scripts/generate-manifests.sh",
+      "problemMatcher": []
+    },
+
+    {
+      "label": "apply-k8s-dev",
+      "type": "shell",
+      "command": "kubectl apply -k ${workspaceFolder}/k8s/development",
+      "problemMatcher": []
+    }
+  ]
+}
