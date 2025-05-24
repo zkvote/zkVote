@@ -1,0 +1,7 @@
+# This Kubernetes manifest defines a Namespace resource named "zkvote".
+# Namespaces are used to organize and isolate resources within a Kubernetes cluster,
+# allowing for better management and access control of resources related to the zkVote project.
+apiVersion: v1 # API version for the Namespace resource
+kind: Namespace # Kind of resource
+metadata: # Metadata for the Namespace resource
+  name: zkvote # Name of the Namespace

@@ -1,0 +1,63 @@
+# This Kubernetes StatefulSet manifest deploys a single Ethereum node using the official Geth (Go Ethereum) client.
+#
+# Key Features:
+# - Deploys as a StatefulSet to provide stable network identity and persistent storage for the Ethereum node.
+# - Uses the `ethereum/client-go:latest` Docker image.
+# - Configured to run in development mode (`--dev`) with HTTP and WebSocket JSON-RPC APIs enabled and accessible on all interfaces.
+# - Exposes HTTP-RPC (8545) and WebSocket-RPC (8546) ports for external access.
+# - Persistent storage is provisioned via a PersistentVolumeClaim (`ethereum-data`) with 10Gi of storage, mounted at `/data`.
+# - Resource requests and limits are set to ensure the node has sufficient CPU and memory.
+# - Suitable for development and testing environments; not recommended for production without further security hardening.
+apiVersion: apps/v1 # API version for StatefulSet
+kind: StatefulSet # Kind of resource
+metadata: # Metadata for the resource
+  name: ethereum-node # Name of the StatefulSet
+  labels: # Labels for the StatefulSet
+    app: ethereum-node # Application label for identification
+spec: # Specification for the StatefulSet
+  serviceName: ethereum-node # Name of the service managing this StatefulSet
+  replicas: 1 # Number of replicas (Ethereum nodes) to run
+  selector: # Selector to identify pods managed by this StatefulSet
+    matchLabels: # Match labels for pods
+      app: ethereum-node # Must match the labels in the pod template
+  template: # Template for the pods created by this StatefulSet
+    metadata: # Metadata for the pod template
+      labels: # Labels for the pod template
+        app: ethereum-node # Application label for identification
+    spec: # Specification for the pod
+      containers: # List of containers in the pod
+        - name: ethereum-node # Name of the container
+          image: ethereum/client-go:latest # Docker image for the Ethereum node
+          args: # Arguments to pass to the Ethereum client
+            - --datadir=/data # Data directory for the Ethereum node
+            - --dev # Run in development mode
+            - --http # Enable HTTP JSON-RPC server
+            - --http.addr=0.0.0.0 # Listen on all interfaces
+            - --http.vhosts=* # Allow all virtual hosts
+            - --http.api=eth,net,web3,debug,txpool # Enable specific APIs
+            - --ws # Enable WebSocket JSON-RPC server
+            - --ws.addr=0.0.0.0 # Listen on all interfaces
+            - --ws.origins=* # Allow all origins
+          ports: # Ports to expose from the container
+            - containerPort: 8545 # Port for HTTP JSON-RPC server
+              name: http-rpc # Name for the HTTP port
+            - containerPort: 8546 # Port for WebSocket JSON-RPC server
+              name: ws-rpc # Name for the WebSocket port
+          volumeMounts: # Volume mounts for persistent storage
+            - name: ethereum-data # Name of the volume to mount
+              mountPath: /data # Path in the container where the volume will be mounted
+          resources: # Resource requests and limits for the container
+            limits: # Resource limits for the container
+              cpu: "2" # Maximum CPU limit
+              memory: "4Gi" # Maximum memory limit
+            requests: # Resource requests for the container
+              cpu: "1" # Minimum CPU request
+              memory: "2Gi" # Minimum memory request
+  volumeClaimTemplates: # Templates for persistent volumes
+    - metadata: # Metadata for the volume claim template
+        name: ethereum-data # Name of the PersistentVolumeClaim
+      spec: # Specification for the PersistentVolumeClaim
+        accessModes: ["ReadWriteOnce"] # Access modes for the volume
+        resources: # Resource requirements for the volume
+          requests: # Resource requests for the volume
+            storage: 10Gi # Requested storage size

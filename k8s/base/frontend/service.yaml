@@ -1,0 +1,18 @@
+# This Kubernetes Service manifest exposes the 'frontend' application within the cluster.
+# - apiVersion: Specifies the API version for the Service resource.
+# - kind: Declares this resource as a Service.
+# - metadata.name: Names the Service 'frontend'.
+# - spec.selector: Selects Pods with the label 'app: frontend' to route traffic to.
+# - spec.ports: Forwards traffic from port 80 on the Service to port 80 on the selected Pods.
+# - spec.type: 'ClusterIP' exposes the Service on a cluster-internal IP, making it accessible only within the cluster.
+apiVersion: v1 # API version for the Service resource
+kind: service # Kind of resource
+metadata: # Metadata for the Service resource
+  name: frontend # Name of the Service
+spec: # Specification for the Service resource
+  selector: # Selector to identify the pods managed by this service
+    app: frontend # Label to match
+  ports: # Ports to expose from the service
+    - port: 80 # Port to expose
+      targetPort: 80 # Port to forward traffic to on the selected pods
+  type: ClusterIP # Type of service (ClusterIP for internal access only)

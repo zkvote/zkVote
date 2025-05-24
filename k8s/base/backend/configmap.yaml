@@ -1,0 +1,11 @@
+# This ConfigMap provides configuration data for the backend service in the Kubernetes cluster.
+# - NODE_ENV: Specifies the environment in which the backend is running (e.g., "production").
+# - API_URL: Defines the base URL for the backend API.
+# The ConfigMap is named 'backend-config' and can be mounted or referenced by backend pods for environment-specific configuration.
+apiVersion: v1 # API version for the ConfigMap resource
+kind: ConfigMap # Kind of resource
+metadata: # Metadata for the ConfigMap resource
+  name: backend-config # Name of the ConfigMap
+data: # Data for the ConfigMap
+  NODE_ENV: "production" # Environment mode for the backend
+  API_URL: "https://api.zkvote.io" # Base URL for the backend API

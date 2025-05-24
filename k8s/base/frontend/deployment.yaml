@@ -1,0 +1,51 @@
+# This Kubernetes Deployment manifest defines the "frontend" application.
+#
+# - Deploys 2 replicas of the frontend container using the image "ghcr.io/zkvote/frontend:latest".
+# - Exposes container port 80.
+# - Sets resource requests (cpu: 0.1, memory: 128Mi) and limits (cpu: 0.5, memory: 512Mi).
+# - Configures a liveness probe on the root path ("/") with an initial delay of 30 seconds and a period of 5 seconds.
+# - Loads environment variables from the "frontend-config" ConfigMap.
+# - Enforces security best practices:
+#     - Runs as a non-root user (UID 1000).
+#     - Uses a read-only root filesystem.
+#     - Disables privilege escalation.
+apiVersion: apps/v1 # API version for the Deployment resource
+kind: Deployment # Kind of resource
+metadata: # Metadata for the Deployment resource
+  name: frontend
+spec: # Specification for the Deployment resource
+  replicas: 2 # Number of replicas to deploy
+  selector: # Selector to identify the pods managed by this deployment
+    matchLabels: # Match labels to identify the pods
+      app: frontend # Label to match
+  template: # Template for the pods
+    metadata: # Metadata for the pod template
+      labels: # Labels for the pod template
+        app: frontend # Label for the pod
+    spec: # Specification for the pod
+      containers: # List of containers in the pod
+        - name: frontend # Name of the container
+          image: ghcr.io/zkvote/frontend:latest # Image for the container
+          ports: # Ports to expose from the container
+            - containerPort: 80 # Port to expose
+          resources: # Resource requirements for the container
+            limits: # Resource limits for the container
+              cpu: "0.5" # Maximum CPU usage
+              memory: "512Mi" # Maximum memory usage
+            requests: # Resource requests for the container
+              cpu: "0.1" # Minimum CPU usage
+              memory: "128Mi" # Minimum memory usage
+          livenessProbe: # Liveness probe for the container which checks if the container is alive
+            httpGet: # HTTP GET request for the liveness probe
+              path: / # Path to check
+              port: 80 # Port to check
+            initialDelaySeconds: 30 # Initial delay before starting the liveness probe
+            periodSeconds: 5 # Frequency of the liveness probe
+          envFrom: # Environment variables for the container
+            - configMapRef: # Reference to the ConfigMap for environment variables
+                name: frontend-config # Name of the ConfigMap
+          securityContext: # Security context for the container
+            runAsNonRoot: true # Run the container as a non-root user
+            runAsUser: 1000 # User ID to run the container as
+            readOnlyRootFilesystem: true # Use a read-only root filesystem
+            allowPrivilegeEscalation: false # Disable privilege escalation

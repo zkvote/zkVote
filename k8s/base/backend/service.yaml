@@ -1,0 +1,18 @@
+# This Kubernetes Service manifest exposes the 'backend' application within the cluster.
+# - apiVersion: Specifies the API version (v1) for the Service resource.
+# - kind: Declares this resource as a Service.
+# - metadata.name: Names the Service 'backend'.
+# - spec.selector: Selects Pods with the label 'app: backend' to route traffic to.
+# - spec.ports: Forwards traffic from port 3000 on the Service to port 3000 on the selected Pods.
+# - spec.type: Sets the Service type to 'ClusterIP', making it accessible only within the cluster.
+apiVersion: v1 # API version for the Service resource
+kind: Service # Kind of resource
+metadata: # Metadata for the Service resource
+  name: backend # Name of the Service
+spec: # Specification for the Service resource
+  selector: # Selector to identify the pods managed by this service
+    app: backend # Label to match
+  ports: # Ports to expose from the service
+    - port: 3000 # Port to expose
+      targetPort: 3000 # Port to forward traffic to on the selected pods
+  type: ClusterIP # Type of service (ClusterIP for internal access only)

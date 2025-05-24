@@ -1,0 +1,21 @@
+# This Kubernetes Service exposes an Ethereum node within the cluster.
+# - It selects pods labeled with 'app: ethereum-node'.
+# - Exposes two ports:
+#   - 8545 for HTTP RPC (named 'http-rpc')
+#   - 8546 for WebSocket RPC (named 'ws-rpc')
+# - The service type is ClusterIP, making it accessible only within the cluster.
+apiVersion: v1 # API version for Service
+kind: Service # Kind of resource
+metadata: # Metadata for the service
+  name: ethereum-node # Name of the service
+spec: # Specification for the service
+  selector: # Selector to identify pods managed by this service
+    app: ethereum-node # Must match the labels in the pod template
+  ports: # Ports to expose from the service
+    - name: http-rpc # Name for the HTTP port
+      port: 8545 # Port for HTTP JSON-RPC server
+      targetPort: 8545 # Target port in the container
+    - name: ws-rpc # Name for the WebSocket port
+      port: 8546 # Port for WebSocket JSON-RPC server
+      targetPort: 8546 # Target port in the container
+  type: ClusterIP # Service type (ClusterIP for internal access only)

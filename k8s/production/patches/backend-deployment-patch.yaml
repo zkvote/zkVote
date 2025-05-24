@@ -1,0 +1,23 @@
+# This Kubernetes deployment patch configures the 'backend' deployment with the following settings:
+# - Sets the number of pod replicas to 2 for high availability.
+# - Specifies resource requests and limits for the 'backend' container:
+#     - Requests: 0.1 CPU and 128Mi memory (minimum resources guaranteed).
+#     - Limits: 0.5 CPU and 512Mi memory (maximum resources allowed).
+# This ensures efficient resource utilization and prevents the container from exceeding defined limits.
+apiVersion: apps/v1 # API version for the Deployment resource
+kind: Deployment # Kind of resource
+metadata: # Metadata for the Deployment resource
+  name: backend # Name of the deployment
+spec: # Specification for the Deployment
+  replicas: 2 # Number of pod replicas for the backend deployment
+  template: # Template for the pod
+    spec: # Specification for the pod template
+      containers: # List of containers in the pod
+        - name: backend # Name of the container
+          resources: # Resource requests and limits for the container
+            limits: # Maximum resources the container can use
+              cpu: "0.5" # Maximum CPU limit for the container
+              memory: "512Mi" # Maximum memory limit for the container
+            requests: # Minimum resources the container requires
+              cpu: "0.1" # Minimum CPU request for the container
+              memory: "128Mi" # Minimum memory request for the container

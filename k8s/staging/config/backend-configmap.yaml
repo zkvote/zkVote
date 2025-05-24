@@ -1,0 +1,18 @@
+# -----------------------------------------------------------------------------
+# ConfigMap for backend service environment variables in the staging environment.
+#
+# This ConfigMap provides configuration data for the backend service, including:
+# - NODE_ENV: Specifies the environment type (set to "staging").
+# - API_URL: The base URL for the frontend API that the backend will communicate with.
+#
+# Usage:
+# Mount or reference this ConfigMap in your backend deployment to inject these
+# environment variables into the backend application.
+# -----------------------------------------------------------------------------
+apiVersion: v1 # API version for the ConfigMap resource
+kind: ConfigMap # Kind of resource
+metadata: # Metadata for the ConfigMap resource
+  name: backend-config # Name of the ConfigMap
+data: # Data for the ConfigMap
+  NODE_ENV: "staging" # Environment type
+  API_URL: "http://frontend:80" # Base URL for the frontend API the backend will communicate with

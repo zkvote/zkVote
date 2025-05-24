@@ -1,0 +1,32 @@
+# This YAML file defines a Kubernetes Deployment patch for the "frontend" component.
+#
+# - apiVersion: Specifies the API version for the Deployment resource.
+# - kind: Indicates that this resource is a Deployment.
+# - metadata:
+#     - name: Sets the name of the Deployment to "frontend".
+# - spec:
+#     - replicas: Sets the desired number of pod replicas to 1.
+#     - template:
+#         - spec:
+#             - containers: Lists the containers for the pod.
+#                 - name: Names the container "frontend".
+#                 - resources:
+#                     - limits: Defines the maximum CPU (0.2 cores) and memory (256Mi) the container can use.
+#                     - requests: Specifies the minimum CPU (0.1 cores) and memory (128Mi) guaranteed for the container.
+apiVersion: apps/v1 # API version for the Deployment resource
+kind: Deployment # Kind of resource
+metadata: # Metadata for the Deployment resource
+  name: frontend # Name of the Deployment
+spec: # Specification for the Deployment
+  replicas: 1 # Number of replicas for the Deployment
+  template: # Template for the Deployment
+    spec: # Specification for the pod template
+      containers: # List of containers in the pod
+        - name: frontend # Name of the container
+          resources: # Resource requirements for the container
+            limits: # Resource limits for the container
+              cpu: "0.2" # Maximum CPU usage
+              memory: "256Mi" # Maximum memory usage
+            requests: # Resource requests for the container
+              cpu: "0.1" # Minimum CPU usage
+              memory: "128Mi" # Minimum memory usage

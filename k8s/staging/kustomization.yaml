@@ -1,0 +1,33 @@
+# Kustomization for the staging environment of zkVote.
+#
+# - Inherits resources from the base configuration.
+# - Sets the namespace to 'zkvote-stage' and prefixes resource names with 'stage-'.
+# - Applies a common label 'environment: staging' to all resources.
+# - Merges deployment patches for frontend and backend from the 'patches' directory.
+# - Generates or merges ConfigMaps for frontend and backend using files from the 'config' directory.
+# - Overrides the image tags for frontend and backend to use the 'stage' tag from GitHub Container Registry.
+apiVersion: kustomize.config.k8s.io/v1beta1 # Kustomize version (v1beta1 is stable)
+kind: Kustomization # specifies this is a Kustomization file
+resources: # List of resources to include
+  - ../base # Base resources for the application
+namespace: zkvote-stage # Namespace for the resources
+namePrefix: stage- # Prefix for all resource names
+commonLabels: # Common labels to apply to all resources
+  environment: staging # Label to identify the environment
+patchesStrategicMerge: # Patches to apply to the resources
+  - patches/frontend-deployment-patch.yaml # Patch for the frontend deployment
+  - patches/backend-deployment-patch.yaml # Patch for the backend deployment
+configMapGenerator: # ConfigMap generation
+  - name: frontend-config # Name of the ConfigMap
+    behavior: merge # Merge behavior for existing ConfigMaps
+    files: # Files to include in the ConfigMap
+      - config/frontend-configmap.yaml # Path to the frontend configmap file
+  - name: backend-config # Name of the ConfigMap
+    behavior: merge # Merge behavior for existing ConfigMaps
+    files: # Files to include in the ConfigMap
+      - config/backend-configmap.yaml # Path to the backend configmap file
+images: # Image overrides
+  - name: ghcr.io/zkvote/frontend # Name of the image to override
+    newTag: stage # New tag for the image
+  - name: ghcr.io/zkvote/backend # Name of the image to override
+    newTag: stage # New tag for the image

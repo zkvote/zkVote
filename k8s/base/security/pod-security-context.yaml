@@ -1,0 +1,29 @@
+# This Deployment manifest configures strict Pod and container-level security settings:
+# - The Pod runs as a non-root user (UID and GID 1000) and assigns the same group for file system access.
+# - The seccomp profile is set to 'RuntimeDefault' for syscall filtering.
+# - The container disables privilege escalation, runs with a read-only root filesystem, and drops all Linux capabilities.
+# - The container is explicitly marked as non-privileged.
+# These settings help enforce the principle of least privilege and enhance the security posture of the application.
+apiVersion: apps/v1 # API version for the Deployment resource
+kind: Deployment # Specifies this is a Deployment resource
+metadata: # Metadata for the Deployment
+  name: backend # Name of the Deployment
+spec: # Specification for the Deployment
+  template: # Template for the Pod managed by this Deployment
+    spec: # Specification for the Pod
+      securityContext: # Security context for the Pod
+        runAsNonRoot: true # Ensures the Pod runs as a non-root user
+        runAsUser: 1000 # User ID for the Pod
+        runAsGroup: 1000 # Group ID for the Pod
+        fsGroup: 1000 # File system group ID for the Pod
+        seccompProfile: # Seccomp profile for the Pod (syscall filtering)
+          type: RuntimeDefault # Use the default seccomp profile provided by Kubernetes
+        containers: # List of containers in the Pod
+          - name: backend # Name of the container
+            securityContext: # Security context for the container
+              allowPrivilegeEscalation: false # Disables privilege escalation for the container
+              readOnlyRootFilesystem: true # Sets the root filesystem to read-only
+              capabilities: # Capabilities for the container
+                drop: # List of capabilities to drop
+                  - ALL # Drops all Linux capabilities
+              privileged: false # Marks the container as non-privileged

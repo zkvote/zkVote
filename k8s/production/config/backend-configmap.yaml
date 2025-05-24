@@ -1,0 +1,10 @@
+# This ConfigMap defines environment variables for the backend service in the production environment.
+# - NODE_ENV: Specifies the environment mode, set to "production".
+# - API_URL: The base URL for the backend API, set to "https://api.zkvote.io".
+apiVersion: v1 # API version for the ConfigMap resource
+kind: ConfigMap # Kind of resource
+metadata: # Metadata for the ConfigMap resource
+  name: backend-config # Name of the ConfigMap
+data: # Data for the ConfigMap
+  NODE_ENV: "production" # Environment mode for the backend, set to "production"
+  API_URL: "https://api.zkvote.io" # Base URL for the backend API the backend will communicate with

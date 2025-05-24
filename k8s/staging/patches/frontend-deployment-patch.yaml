@@ -1,0 +1,23 @@
+# This Kubernetes deployment patch configures the 'frontend' deployment.
+# - Sets the number of pod replicas to 1.
+# - Specifies resource requests and limits for the 'frontend' container:
+#     - Requests: 0.1 CPU and 128Mi memory (minimum resources guaranteed).
+#     - Limits: 0.4 CPU and 512Mi memory (maximum resources allowed).
+# Use this patch to control resource allocation for the frontend service in the staging environment.
+apiVersion: apps/v1 # API version for the Deployment resource
+kind: Deployment # Kind of resource
+metadata: # Metadata for the Deployment resource
+  name: frontend # Name of the Deployment
+spec: # Specification for the Deployment
+  replicas: 1 # Number of pod replicas
+  template: # Template for the pod
+    spec: # Specification for the pod
+      containers: # List of containers in the pod
+        - name: frontend # Name of the container
+          resources: # Resource requests and limits for the container
+            limits: # Maximum resources allowed for the container
+              cpu: "0.4" # Maximum CPU allowed
+              memory: "512Mi" # Maximum memory allowed
+            requests: # Minimum resources guaranteed for the container
+              cpu: "0.1" # Minimum CPU guaranteed
+              memory: "128Mi" # Minimum memory guaranteed

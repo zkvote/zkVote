@@ -1,0 +1,23 @@
+# This kustomization.yaml file defines the base configuration for the zkVote application in a Kubernetes environment.
+# It specifies the API version and kind for Kustomize, and lists the resource manifests to be included:
+# - Namespace definition
+# - Frontend and backend deployments, services, and configmaps
+# The namespace for all resources is set to 'zkvote'.
+# Common labels 'app: zkvote' and 'part-of: zkvote' are applied to all managed resources for easier identification and grouping.
+apiVersion: kustomize.config.k8s.io/v1beta1 # Kustomize version (v1beta1 is stable)
+kind: Kustomization # specifies this is a Kustomization file
+
+resources: # List of resources to include
+  - namespace.yaml # Namespace definition
+  - frontend/deployment.yaml # Frontend deployment
+  - frontend/service.yaml # Frontend service
+  - frontend/configmap.yaml # Frontend configmap
+  - backend/deployment.yaml # Backend deployment
+  - backend/service.yaml # Backend service
+  - backend/configmap.yaml # Backend configmap
+
+namespace: zkvote # Namespace for the resources
+
+commonLabels: # Common labels for all resources
+  app: zkvote # Common label for all resources
+  part-of: zkvote # Part of the zkvote application

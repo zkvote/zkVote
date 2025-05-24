@@ -1,0 +1,27 @@
+# This Kubernetes deployment patch configures the 'backend' deployment with specific resource requests and limits.
+# - Sets the number of pod replicas to 1.
+# - Specifies resource limits for the 'backend' container:
+#     - CPU limit: 0.2 cores
+#     - Memory limit: 256Mi
+# - Specifies resource requests for the 'backend' container:
+#     - CPU request: 0.1 cores
+#     - Memory request: 128Mi
+# Resource requests ensure the container gets the specified minimum resources,
+# while limits cap the maximum resources the container can use.
+apiVersion: apps/v1 # API version for the Deployment resource
+kind: Deployment # Kind of resource
+metadata: # Metadata for the Deployment resource
+  name: backend # Name of the Deployment
+spec: # Specification for the Deployment resource
+  replicas: 1 # Number of pod replicas
+  template: # Template for the pod
+    spec: # Specification for the pod
+      containers: # List of containers in the pod
+        - name: backend # Name of the container
+          resources: # Resource requests and limits for the container
+            limits: # Resource limits for the container
+              cpu: "0.2" # Maximum CPU limit
+              memory: "256Mi" # Maximum memory limit
+            requests: # Resource requests for the container
+              cpu: "0.1" # Minimum CPU request
+              memory: "128Mi" # Minimum memory request

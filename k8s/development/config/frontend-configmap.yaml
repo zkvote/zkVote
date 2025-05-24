@@ -1,0 +1,10 @@
+# This ConfigMap provides environment variables for the frontend service in the development environment.
+# - NODE_ENV: Specifies the environment mode (set to "development").
+# - API_URL: Defines the backend API endpoint URL the frontend should communicate with.
+apiVersion: v1 # API version for the ConfigMap resource
+kind: ConfigMap # Kind of resource
+metadata: # Metadata for the ConfigMap resource
+  name: frontend-config # Name of the ConfigMap
+data: # Data for the ConfigMap
+  NODE_ENV: "development" # Environment mode for the frontend
+  API_URL: "https://backend:3000" # Base URL for the backend API the frontend will communicate with

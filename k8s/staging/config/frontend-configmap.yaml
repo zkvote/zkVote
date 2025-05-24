@@ -1,0 +1,10 @@
+# This ConfigMap provides environment-specific configuration for the frontend application.
+# - NODE_ENV: Specifies the environment in which the frontend is running (e.g., staging).
+# - API_URL: Defines the base URL for the backend API that the frontend will use for communication.
+apiVersion: v1 # API version for the ConfigMap resource
+kind: ConfigMap # Kind of resource
+metadata: # Metadata for the ConfigMap resource
+  name: frontend-config # Name of the ConfigMap
+data: # Data for the ConfigMap
+  NODE_ENV: "staging" # Environment mode for the frontend, set to "staging"
+  API_URL: "http://backend:3000" # Base URL for the backend API the frontend will communicate with

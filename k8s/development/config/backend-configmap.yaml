@@ -1,0 +1,12 @@
+# ConfigMap for backend service configuration in development environment.
+#
+# - NODE_ENV: Specifies the environment in which the backend is running. Set to "development".
+# - API_URL: The base URL for the frontend API that the backend will communicate with.
+#   In this case, it points to the frontend service within the Kubernetes cluster.
+apiVersion: v1 # API version for the ConfigMap resource
+kind: ConfigMap # Kind of resource
+metadata: # Metadata for the ConfigMap resource
+  name: backend-config # Name of the ConfigMap
+data: # Data for the ConfigMap
+  NODE_ENV: "development" # Environment mode for the backend, set to "development"
+  API_URL: "http://frontend:80" # Base URL for the frontend API the backend will communicate with
