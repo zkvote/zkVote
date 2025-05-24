@@ -1,0 +1,113 @@
+services:
+  # Service: frontend-test
+  # ----------------------
+  # This service builds and runs the frontend application in test mode.
+  # - Uses the Dockerfile in ./ui with the 'build' target.
+  # - Runs tests using the 'npm test' command.
+  # - Sets environment variables for test configuration:
+  #     NODE_ENV: Specifies the environment as 'test'.
+  #     JEST_JUNIT_OUTPUT_DIR: Directory for Jest JUnit test reports.
+  # - Mounts the local './reports' directory to '/reports' in the container for test output.
+  frontend-test:
+    build:
+      context: ./ui
+      target: build
+    command: npm test
+    environment:
+      - NODE_ENV=test
+      - JEST_JUNIT_OUTPUT_DIR=/reports
+    volumes:
+      - ./reports:/reports
+
+  # Service: backend-test
+  # ---------------------
+  # This service builds and runs the backend application in test mode.
+  # - Uses the Dockerfile in ./src with the 'build' target.
+  # - Runs tests using the 'npm test' command.
+  # - Sets environment variables for test configuration:
+  #     NODE_ENV: Specifies the environment as 'test'.
+  #     DATABASE_URL: Connection string for the test PostgreSQL database.
+  #     REDIS_URL: Connection string for the Redis instance.
+  #     BLOCKCHAIN_RPC: RPC endpoint for the Ganache blockchain.
+  #     JEST_JUNIT_OUTPUT_DIR: Directory for Jest JUnit test reports.
+  # - Mounts the local './reports' directory to '/reports' in the container for test output.
+  # - Depends on the 'postgres', 'redis', and 'ganache' services to be available before starting.
+  backend-test:
+    build:
+      context: ./src
+      target: build
+    command: npm test
+    environment:
+      - NODE_ENV=test
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/zkvote_test
+      - REDIS_URL=redis://redis:6379
+      - BLOCKCHAIN_RPC=http://ganache:8545
+      - JEST_JUNIT_OUTPUT_DIR=/reports
+    volumes:
+      - ./reports:/reports
+    depends_on:
+      - postgres
+      - redis
+      - ganache
+
+  # Service: contract-test
+  # ----------------------
+  # This service builds and runs the smart contract tests using Hardhat.
+  # - Uses the Dockerfile in ./contracts.
+  # - Runs tests using the 'npx hardhat test' command.
+  # - Sets environment variables for test configuration:
+  #     NODE_ENV: Specifies the environment as 'test'.
+  #     REPORT_GAS: Enables gas reporting for contract tests.
+  # - Mounts the local './reports' directory to '/reports' in the container for test output.
+  # - Depends on the 'ganache' service to be available before starting.
+  contract-test:
+    build:
+      context: ./contracts
+    command: npx hardhat test
+    environment:
+      - NODE_ENV=test
+      - REPORT_GAS=true
+    volumes:
+      - ./reports:/reports
+    depends_on:
+      - ganache
+
+  # Service: e2e-test
+  # -----------------
+  # This service builds and runs end-to-end tests using Cypress or similar tools.
+  # - Uses the Dockerfile in ./e2e.
+  # - Runs tests using the 'npm run test:e2e' command.
+  # - Sets environment variables for test configuration:
+  #     FRONTEND_URL: URL of the frontend service.
+  #     API_URL: URL of the backend service.
+  #     CYPRESS_VIDEO: Enables video recording for Cypress tests.
+  # - Mounts the local './reports' directory to '/reports' in the container for test output.
+  # - Depends on the 'frontend' and 'backend' services to be available before starting.
+  e2e-test:
+    build:
+      context: ./e2e
+    command: npm run test:e2e
+    environment:
+      - FRONTEND_URL=http://frontend
+      - API_URL=http://backend:3000
+      - CYPRESS_VIDEO=true
+    volumes:
+      - ./reports:/reports
+    depends_on:
+      - frontend
+      - backend
+
+  # Service: postgres
+  # -----------------
+  # This service runs the PostgreSQL database for testing.
+  # - Sets environment variables for test configuration:
+  #     POSTGRES_DB: Name of the test database.
+  postgres:
+    environment:
+      - POSTGRES_DB=zkvote_test
+
+# This section defines a custom Docker network named 'zkvote-test-network'.
+# All services in this Compose file will be connected to this network by default.
+networks:
+  default:
+    name: zkvote-test-network

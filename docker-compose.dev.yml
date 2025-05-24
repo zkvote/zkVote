@@ -1,0 +1,92 @@
+services:
+  # Service: frontend
+  # -----------------
+  # This service builds and runs the frontend application in development mode.
+  # - Uses the 'build' target from the Dockerfile.
+  # - Mounts the local './ui' directory to '/app' in the container for live code updates.
+  # - Mounts '/app/node_modules' as a volume to persist dependencies and avoid overwriting them.
+  # - Runs 'npm run dev' to start the development server.
+  # - Sets environment variables:
+  #     NODE_ENV=development      # Specifies development environment.
+  #     VITE_API_URL=http://localhost:3001  # Sets the API URL for the frontend to communicate with the backend.
+  frontend:
+    build:
+      target: build
+    volumes:
+      - ./ui:/app
+      - /app/node_modules
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001
+
+  # Service: backend
+  # ----------------
+  # This service builds and runs the backend application in development mode.
+  # - Uses the 'build' target from the Dockerfile.
+  # - Mounts the local './src' directory to '/app' in the container for live code updates.
+  # - Mounts '/app/node_modules' as a volume to persist dependencies and avoid overwriting them.
+  # - Runs 'npm run dev' to start the backend development server.
+  # - Sets environment variables:
+  #     NODE_ENV=development      # Specifies development environment.
+  #     DEBUG=zkvote:*            # Enables debug logging for the backend.
+  backend:
+    build:
+      target: build
+    volumes:
+      - ./src:/app
+      - /app/node_modules
+    command: npm run dev
+    environment:
+      - NODE_ENV=development
+      - DEBUG=zkvote:*
+
+  # Service: postgres
+  # -----------------
+  # This service exposes the PostgreSQL database for development.
+  # - Maps port 5432 on the host to 5432 in the container.
+  postgres:
+    ports:
+      - "5432:5432"
+
+  # Service: redis
+  # --------------
+  # This service exposes the Redis in-memory data store for development.
+  # - Maps port 6379 on the host to 6379 in the container.
+  redis:
+    ports:
+      - "6379:6379"
+
+  # Service: ganache
+  # ----------------
+  # This service runs the Ganache blockchain emulator for development.
+  # - Mounts the local './contracts' directory to '/app' in the container for live code updates.
+  # - Mounts '/app/node_modules' as a volume to persist dependencies and avoid overwriting them.
+  # - Sets environment variables:
+  #     MNEMONIC="test test test test test test test test test test test junk"  # Sets the mnemonic for deterministic accounts.
+  ganache:
+    volumes:
+      - ./contracts:/app
+      - /app/node_modules
+    environment:
+      - MNEMONIC="test test test test test test test test test test test junk"
+
+  # Service: polygon-node
+  # ---------------------
+  # This service runs a Polygon-compatible Ethereum node in development mode.
+  # - Sets environment variables:
+  #     DEVELOPER_MODE=true       # Enables developer mode for the node.
+  polygon-node:
+    environment:
+      - DEVELOPER_MODE=true
+
+  # Service: arbitrum-node
+  # ----------------------
+  # This service runs an Arbitrum Nitro node in development mode.
+  # - Sets environment variables:
+  #     DEVELOPER_MODE=true       # Enables developer mode for the node.
+  arbitrum-node:
+    environment:
+      - DEVELOPER_MODE=true
+
+  # Add development-only services

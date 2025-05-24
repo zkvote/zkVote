@@ -1,6 +1,19 @@
 FROM node:22-alpine
 
-# Install required development tools
+# Install essential development and utility packages:
+# - bash: GNU Bourne Again SHell
+# - curl: Command-line tool for transferring data with URLs
+# - git: Distributed version control system
+# - make: Build automation tool
+# - python3: Python programming language interpreter
+# - g++: GNU C++ compiler
+# - libc6-compat: Compatibility for glibc-based binaries
+# - openssh-client: SSH client for secure remote access
+# - docker-cli: Docker command-line interface
+# - docker-compose: Tool for defining and running multi-container Docker applications
+# - jq: Command-line JSON processor
+# - yq: Command-line YAML processor
+# - vim: Text editor
 RUN apk add --no-cache \
     bash \
     curl \
@@ -36,7 +49,9 @@ RUN apk add --no-cache \
     liboqs-dev \
     && npm install -g @zkvote/pqc-tools
 
-# Create non-root user
+# Create a new group 'node' with GID 1000, add a user 'node' with UID 1000 to this group,
+# set the user's shell to /bin/sh, and ensure no password is required (-D).
+# Then, create the application directory at /home/node/app and set its ownership to the 'node' user and group.
 RUN addgroup -g 1000 node && \
     adduser -u 1000 -G node -s /bin/sh -D node && \
     mkdir -p /home/node/app && \
