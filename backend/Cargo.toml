@@ -1,0 +1,20 @@
+[package]
+name = "zkvote_backend"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "zkvote_backend_server" # Or your preferred binary name
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+# Add your web framework, e.g., actix-web, axum, warp
+# Add ethers-rs or similar for blockchain interaction
+# Add serde for serialization/deserialization
+config = "0.13"
+serde = { version = "1.0", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt"] }
+atty = "0.2"
+# ... other dependencies

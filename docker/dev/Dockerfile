@@ -30,10 +30,10 @@ RUN apk add --no-cache \
     vim
 
 # Install Rust for cryptographic tools
+ENV PATH="/root/.cargo/bin:${PATH}"
 RUN apk add --no-cache \
     rustup \
-    && rustup-init -y \
-    && source $HOME/.cargo/env
+    && rustup-init -y --no-modify-path
 
 # Install Go for some tools
 RUN apk add --no-cache Go

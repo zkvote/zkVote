@@ -1,7 +1,7 @@
 services:
   # Service: frontend
   # -----------------
-  # This service builds the frontend application from the Dockerfile located in ./ui.
+  # This service builds the frontend application from the Dockerfile located in ./ui/voter_app.
   #
   # Build Arguments:
   #   - PQC_SIGNATURE_VERIFY: Enables or disables post-quantum cryptography signature verification (default: false).
@@ -26,7 +26,7 @@ services:
   #   - Start period: 10 seconds
   frontend:
     build:
-      context: ./ui
+      context: ./ui/voter_app
       dockerfile: Dockerfile
       args:
         - PQC_SIGNATURE_VERIFY=false
@@ -46,7 +46,7 @@ services:
 
   # Service: backend
   # -----------------
-  # This service builds the backend application from the Dockerfile located in ./src.
+  # This service builds the backend application from the Dockerfile located in ./backend.
   #
   # Build Arguments:
   #   - PQC_SIGNATURE_VERIFY: Enables or disables post-quantum cryptography signature verification (default: false).
@@ -79,7 +79,7 @@ services:
   #   - Start period: 10 seconds
   backend:
     build:
-      context: ./src
+      context: ./backend
       dockerfile: Dockerfile
       args:
         - PQC_SIGNATURE_VERIFY=false

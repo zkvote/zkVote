@@ -10,7 +10,7 @@ services:
   # - Mounts the local './reports' directory to '/reports' in the container for test output.
   frontend-test:
     build:
-      context: ./ui
+      context: ./ui/voter_app
       target: build
     command: npm test
     environment:
@@ -34,7 +34,7 @@ services:
   # - Depends on the 'postgres', 'redis', and 'ganache' services to be available before starting.
   backend-test:
     build:
-      context: ./src
+      context: ./backend
       target: build
     command: npm test
     environment:

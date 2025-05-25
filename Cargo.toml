@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "backend",
+    # "circuits", # if circuits/ has its own Cargo.toml for Rust code
+    # "sdk/rust", # if you add a Rust SDK
+]

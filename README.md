@@ -10,7 +10,7 @@
 
 zkVote is a next-generation privacy-preserving voting protocol designed specifically for decentralized autonomous organizations (DAOs) and blockchain governance systems. Leveraging zero-knowledge proof technology, zkVote enables fully confidential voting while maintaining verifiable results and transparent governance processes.
 
-**Current Status:** Pre-production (April 2025)
+**Current Status:** Pre-production (May 2025)
 
 [![Security Audit](https://img.shields.io/badge/Security-NotAudited-red)](docs/Security,%20Testing,%20and%20Audits/securityTestingChecklist.md)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
@@ -117,47 +117,6 @@ Comprehensive documentation is available in the `/docs` folder:
 | **Integration Framework** | Q4 2025-Q1 2026 | DAO adapters, cross-chain modules      |
 | **Beta Release**          | Q2 2026         | Limited production deployment          |
 | **Production Launch**     | Q3 2026         | General availability                   |
-
-## 💼 Business Model
-
-zkVote utilizes a multi-faceted revenue model that balances open source accessibility with premium services:
-
-| Tier                  | Target                         | Core Features                                       | Price Point       |
-| --------------------- | ------------------------------ | --------------------------------------------------- | ----------------- |
-| **Community Edition** | Small DAOs, Developers         | Core voting, basic privacy, single-chain            | Free, open source |
-| **Standard**          | Medium DAOs                    | Full privacy features, basic cross-chain            | $2,500/month      |
-| **Professional**      | Large DAOs, DeFi Protocols     | All features, multi-chain, priority support         | $7,500/month      |
-| **Enterprise**        | Major Protocols, Institutional | All features, custom development, dedicated support | $25,000+/month    |
-
-For detailed pricing and licensing information, please contact us or refer to our [Business Model and Monetization Plan](docs/Governance,%20Community,%20and%20Business/businessModel_and_monetizationPlan.md).
-
-## 🤝 Enterprise Support
-
-Enterprise customers receive:
-
-- Dedicated technical account management
-- 24/7 priority support
-- Custom implementation assistance
-- Security reviews and recommendations
-- Guaranteed response times
-- Custom feature development
-
-## 🌐 Community and Contribution
-
-zkVote is built with community involvement:
-
-- [Discord Community](https://discord.gg/zkvote)
-- [Developer Documentation](https://docs.zkvote.io)
-- [Contribution Guidelines](CONTRIBUTING.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Issue Tracker](https://github.com/yourusername/zkVote/issues)
-
-## 📞 Contact & Support
-
-- **Website**: [https://zkvote.io](https://zkvote.io)
-- **Email**: info@zkvote.io
-- **Enterprise Inquiries**: enterprise@zkvote.io
-- **Security Reports**: security@zkvote.io
 
 ## 📄 License
 

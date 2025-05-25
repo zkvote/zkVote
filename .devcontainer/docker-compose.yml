@@ -2,7 +2,7 @@ services:
   dev:
     build:
       context: ..
-      dockerfile: docker/dev/dockerfile
+      dockerfile: docker/dev/Dockerfile
     volumes:
       - ..:/workspace:cached
       - node_modules:/workspace/node_modules
@@ -10,7 +10,6 @@ services:
       - backend_node_modules:/workspace/backend/node_modules
       - contracts_node_modules:/workspace/contracts/node_modules
       - circuits_node_modules:/workspace/circuits/node_modules
-      - bridge_node_modules:/workspace/bridge/node_modules
       - ~/.ssh:/home/node/.ssh:ro
       - ~/.gitconfig:/home/node/.gitconfig:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -29,4 +28,3 @@ services:
     backend_node_modules:
     contracts_node_modules:
     circuits_node_modules:
-    bridge_node_modules:

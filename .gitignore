@@ -2,3 +2,14 @@ keys/
 package-lock.json
 node_modules/
 .qodo/
+
+.env.local
+.env.testnet
+**/.env.development
+**/.env.production
+
+**/.DS_Store
+
+# Added by cargo
+
+/target

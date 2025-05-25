@@ -3,7 +3,7 @@ services:
   # -----------------
   # This service builds and runs the frontend application in development mode.
   # - Uses the 'build' target from the Dockerfile.
-  # - Mounts the local './ui' directory to '/app' in the container for live code updates.
+  # - Mounts the local './ui/voter_app' directory to '/app' in the container for live code updates.
   # - Mounts '/app/node_modules' as a volume to persist dependencies and avoid overwriting them.
   # - Runs 'npm run dev' to start the development server.
   # - Sets environment variables:
@@ -13,7 +13,7 @@ services:
     build:
       target: build
     volumes:
-      - ./ui:/app
+      - ./ui/voter_app:/app
       - /app/node_modules
     command: npm run dev
     environment:
@@ -24,7 +24,7 @@ services:
   # ----------------
   # This service builds and runs the backend application in development mode.
   # - Uses the 'build' target from the Dockerfile.
-  # - Mounts the local './src' directory to '/app' in the container for live code updates.
+  # - Mounts the local './backend' directory to '/app' in the container for live code updates.
   # - Mounts '/app/node_modules' as a volume to persist dependencies and avoid overwriting them.
   # - Runs 'npm run dev' to start the backend development server.
   # - Sets environment variables:
@@ -34,7 +34,7 @@ services:
     build:
       target: build
     volumes:
-      - ./src:/app
+      - ./backend:/app
       - /app/node_modules
     command: npm run dev
     environment:
