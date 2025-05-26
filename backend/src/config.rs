@@ -1,10 +1,5 @@
-/// Imports the `Deserialize` trait from the `serde` crate, which enables
-/// deserialization of data structures from formats such as JSON, TOML, etc.
-///
-/// This trait is commonly derived for structs and enums to allow automatic
-/// parsing of external data into Rust types.
 use serde::Deserialize;
-use std::env; // Importing the `env` module from the standard library to access environment variables
+use std::env;
 
 #[derive(Debug, Deserialize, Clone)]
 /// Configuration settings for the zkVote application.
@@ -36,19 +31,10 @@ pub struct Settings {
 
 /// Creates a new `Settings` instance by loading configuration from environment variables.
 ///
-/// # Returns
-/// Returns a `Result` containing the deserialized `Settings` struct on success,
-/// or a `config::ConfigError` if configuration loading or deserialization fails.
-///
 /// # Environment
 /// - Determines the environment from the `RUST_ENV` variable, defaulting to `"development"` if not set.
 /// - Loads configuration from environment variables with the `APP_` prefix and from default environment variables.
 /// - Ignores empty environment variables.
-///
-/// # Example
-/// ```
-/// let settings = Settings::new()?;
-/// ```
 impl Settings {
   pub fn new() -> Result<Self, config::ConfigError> {
     // Determine the environment. Default to "development" if not set.
@@ -68,19 +54,6 @@ impl Settings {
 
 
 /// Validates the application settings to ensure all required fields are properly set.
-///
-/// # Arguments
-/// * `settings` - A reference to the `Settings` struct to validate
-///
-/// # Returns
-/// * `Ok(())` if all settings are valid
-/// * `Err(String)` with an error message describing the first validation failure encountered
-///
-/// # Example
-///
-/// let settings = Settings::new()?;
-/// validate(&settings)?;
-///
 pub fn validate(settings: &Settings) -> Result<(), String> {
     if settings.backend_port == 0 {
         return Err("Invalid backend port".into());
