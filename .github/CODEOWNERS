@@ -1,0 +1,39 @@
+# Lines starting with '#' are comments.
+# Each line is a file pattern followed by one or more owners.
+
+# Global owners for all files (optional, use with caution)
+# * @global-owner-team
+
+# CI/CD Configuration - Managed by DevOps
+/.github/workflows/* @devops-team
+/.github/actions/ @devops-team
+/.github/CODEOWNERS @devops-team # Meta: CODEOWNERS itself should be owned
+
+# Smart Contracts - Managed by Blockchain/Smart Contract Team
+/contracts/ @blockchain-team
+/circuits/ @zkp-team @blockchain-team
+
+# Frontend - Managed by Frontend Team
+/frontend/ @frontend-team
+/sdk/ @frontend-team @backend-team # SDK might be co-owned
+
+# Backend - Managed by Backend Team
+/backend/ @backend-team
+
+# Security related configurations and reports
+/security/ @security-team
+/.github/SECURITY_ISSUE_TEMPLATE.md @security-team
+
+# Monitoring and Performance
+/monitoring/ @devops-team @backend-team
+/performance/ @devops-team @backend-team
+/.github/STATUS_CHECK_TEMPLATE.md @devops-team
+/.github/CONTRACT_ANOMALY_TEMPLATE.md @blockchain-team @devops-team
+/.github/PERFORMANCE_ISSUE_TEMPLATE.md @backend-team @devops-team
+/.github/ATTESTATION_ISSUE_TEMPLATE.md @blockchain-team @security-team
+
+# Kubernetes configurations
+/k8s/ @devops-team
+
+# Documentation
+/docs/ @documentation-team

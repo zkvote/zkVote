@@ -1,0 +1,71 @@
+# This GitHub Action is named "Blockchain Build Verification".
+# It is designed to verify build artifacts against an on-chain registry,
+# ensuring that the generated outputs match what is recorded on the blockchain.
+# Use this action to add an extra layer of trust and integrity to your build process,
+# particularly for blockchain-related projects.
+name: "Blockchain Build Verification"
+description: "Verifies the build artifacts against on-chain registry"
+# This GitHub Action receives the following inputs:
+# - artifacts-path (required): Specifies the path to the build artifacts directory.
+# - network (required, default: "sepolia"): Indicates which blockchain network to use for verification.
+# - registry-contract (required): The address of the build registry contract to interact with.
+inputs:
+  artifacts-path:
+    description: "Path to the build artifacts directory"
+    required: true
+  network:
+    description: "Blockchain network to use"
+    required: true
+    default: "sepolia"
+  registry-contract:
+    description: "Address of the build registry contract"
+    required: true
+# This section defines the outputs for the blockchain verification GitHub Action.
+# - 'verification-hash': Provides the hash of the verified build artifact, as produced by the 'verify' step.
+# - 'verification-tx': Supplies the transaction hash corresponding to the verification recorded on the blockchain, also from the 'verify' step.
+outputs:
+  verification-hash:
+    description: "The hash of the verified build artifact"
+    value: ${{ steps.verify.outputs.hash }}
+  verification-tx:
+    description: "The transaction hash of the verification on the blockchain"
+    value: ${{ steps.verify.outputs.tx }}
+# This GitHub Action metadata file defines a composite action.
+# The 'runs' section specifies that the action uses the 'composite' type,
+# allowing it to execute a sequence of shell steps or other actions.
+runs:
+  using: "composite"
+  steps:
+    # Installs the global npm package '@zkvote/blockchain-verifier' required for blockchain verification tasks.
+    # Uses the Bash shell to execute the installation command.
+    - name: Install dependencies
+      run: npm install -g @zkvote/blockchain-verifier
+      shell: bash
+
+    # This step computes a hash of the specified artifacts using the `blockchain-verifier` tool.
+    # The resulting hash is stored in the GitHub Actions output variable `hash` for use in subsequent steps.
+    # - `inputs.artifacts-path`: Path to the artifacts whose hash needs to be computed.
+    # - The computed hash can be referenced in later steps using `${{ steps.hash.outputs.hash }}`.
+    - name: Compute artifact hash
+      id: hash
+      run: echo "hash=$(blockchain-verifier hash ${{ inputs.artifacts-path }})" >> $GITHUB_OUTPUT
+      shell: bash
+
+    # This step verifies a hash on the blockchain using the `blockchain-verifier` CLI.
+    # It takes the hash output from a previous step, the target network, and the registry contract address as inputs.
+    # The deployer's private key is provided via environment variable for authentication.
+    # The result of the verification command is parsed to extract the transaction hash.
+    # Both the original hash and the resulting transaction hash are set as outputs for use in subsequent workflow steps.
+    - name: Verify on-chain
+      id: verify
+      run: |
+        RESULT=$(blockchain-verifier verify \
+          --hash ${{ steps.hash.outputs.hash }} \
+          --network ${{ inputs.network }} \
+          --contracct ${{ inputs.registry-contract }}) \
+          --key ${{ env.DEPLOYER_PRIVATE_KEY }}
+        echo "hash=${{ steps.hash.outputs.hash }}" >> $GITHUB_OUTPUT
+        echo "tx=$(echo $RESULT | jq -r '.transactionHash')" >> $GITHUB_OUTPUT
+      shell: bash
+      env:
+        DEPLOYER_PRIVATE_KEY: ${{ env.DEPLOYER_PRIVATE_KEY }}
