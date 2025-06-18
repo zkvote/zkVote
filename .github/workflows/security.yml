@@ -1,0 +1,542 @@
+# Security Testing Workflow Documentation
+#
+# This comprehensive security workflow provides automated security testing and monitoring
+# for the zkVote project, a zero-knowledge proof voting system. The workflow implements
+# multiple layers of security analysis to ensure the integrity and security of the
+# decentralized voting platform.
+#
+# WORKFLOW OVERVIEW:
+# ==================
+# The workflow consists of three active security testing jobs and additional commented
+# jobs for advanced security testing capabilities. It supports mixed technology stacks
+# including TypeScript, Rust, and Solidity smart contracts.
+#
+# TRIGGER CONDITIONS:
+# ===================
+# - Scheduled: Daily execution at midnight UTC (0 0 * * *)
+# - Manual: On-demand execution via workflow_dispatch
+# - Purpose: Continuous security monitoring and vulnerability detection
+#
+# ACTIVE SECURITY JOBS:
+# =====================
+#
+# 1. DEPENDENCY SECURITY SCAN (dependency-scan)
+#    - Technology Stack: Node.js v22, Rust v1.86
+#    - Scans: Frontend (ui/voter_app), SDK, Backend (Rust), Smart Contracts
+#    - Tools: npm audit (moderate level), cargo-audit, cargo-deny
+#    - Output: Consolidated markdown security report
+#    - Retention: 30 days
+#    - Error Handling: Continue-on-error for non-blocking vulnerability detection
+#
+# 2. STATIC CODE ANALYSIS (static-analysis)
+#    - CodeQL Analysis: TypeScript and Rust code security scanning
+#    - Query Suite: security-and-quality
+#    - Smart Contract Analysis: Slither analyzer for Solidity contracts
+#    - Environment: Ubuntu latest, Node.js 22, Python 3.9
+#    - Output: SARIF format for GitHub Security integration, JSON reports
+#    - Artifacts: CodeQL results, Slither output (30-day retention)
+#
+# 3. SECRET DETECTION (secret-scan)
+#    - Tool: TruffleHog secret scanner
+#    - Scope: Complete repository scan
+#    - Detection: API keys, tokens, credentials, sensitive information
+#    - Comparison: Main branch vs current HEAD
+#    - Purpose: Prevent accidental credential exposure
+#
+# COMMENTED ADVANCED SECURITY CAPABILITIES:
+# ==========================================
+# The workflow includes commented sections for advanced security testing:
+#
+# - ADVANCED FUZZING: Contract fuzzing with ityFuzz and ML-guided testing
+# - PENETRATION TESTING: OWASP ZAP scans, API security testing, attack simulation
+# - POST-QUANTUM CRYPTOGRAPHY: CRYSTALS-Dilithium validation and quantum readiness
+# - SECURITY NOTIFICATIONS: Automated incident response and team notifications
+#
+# SECURITY BENEFITS:
+# ==================
+# - Multi-layer security analysis across different technology stacks
+# - Early vulnerability detection and prevention
+# - Automated compliance monitoring
+# - Integration with GitHub Security features
+# - Comprehensive reporting and artifact retention
+# - Support for both traditional and quantum-resistant cryptography
+#
+# ARTIFACT MANAGEMENT:
+# ====================
+# - All security reports retained for 30 days
+# - SARIF integration with GitHub Security tab
+# - JSON and markdown format outputs for analysis
+# - Automated artifact upload and management
+#
+# WORKFLOW DEPENDENCIES:
+# ======================
+# - Repository structure: ui/voter_app, sdk, backend, contracts directories
+# - Configuration files: package.json, Cargo.toml, hardhat.config.js
+# - GitHub Secrets: Required for advanced PQC testing (when enabled)
+# - External services: Slack webhook for notifications (when enabled)
+name: Security Testing
+# Security Workflow
+#
+# This workflow performs automated security checks and scans on the repository.
+#
+# Triggers:
+# - Scheduled: Runs daily at midnight UTC (0 0 * * *)
+# - Manual: Can be triggered manually via workflow_dispatch
+#
+# The daily schedule ensures regular security monitoring and vulnerability detection
+# while the manual trigger allows for on-demand security scans when needed.
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+jobs:
+  # Dependency Security Scan Job
+  #
+  # This job performs comprehensive security scanning of all project dependencies
+  # across multiple technology stacks (Node.js and Rust). It runs on Ubuntu and
+  # includes the following components:
+  #
+  # Setup Phase:
+  # - Checks out the repository code
+  # - Sets up Node.js v22 environment
+  # - Sets up Rust toolchain v1.86
+  # - Installs Rust security tools (cargo-audit, cargo-deny)
+  #
+  # Security Scanning:
+  # - Frontend (ui/voter_app): Scans npm dependencies with moderate audit level
+  # - SDK: Scans npm dependencies with moderate audit level
+  # - Backend: Runs cargo-audit and cargo-deny for Rust dependency vulnerabilities
+  # - Smart Contracts: Scans npm dependencies with moderate audit level
+  #
+  # Reporting:
+  # - Generates a comprehensive markdown security report combining results from all components
+  # - Uploads the dependency report as a workflow artifact (retained for 30 days)
+  #
+  # Notes:
+  # - All scan steps use continue-on-error to prevent workflow failure on vulnerabilities
+  # - The job focuses on identification rather than blocking, allowing teams to review findings
+  # - Supports mixed technology stack with both npm and cargo dependency management
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: "1.86"
+          override: true
+
+      - name: Install security tools
+        run: |
+          cargo install cargo-audit cargo-deny
+
+      - name: Check frontend dependencies
+        working-directory: ./ui/voter_app
+        run: |
+          npm ci
+          npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Check SDK dependencies
+        working-directory: ./sdk
+        run: |
+          npm ci
+          npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Check backend dependencies
+        working-directory: ./backend
+        run: |
+          if ! command -v cargo-audit &> /dev/null; then
+            echo "cargo-audit not found, installing..."
+            cargo install cargo-audit
+          fi
+          cargo audit --deny warnings
+          cargo deny check
+        continue-on-error: true
+
+      - name: Check smart contract dependencies
+        working-directory: ./contracts
+        run: |
+          npm ci
+          npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Generate dependency report
+        run: |
+          echo "# Dependency Security Report" > dependency-report.md
+          echo "## Frontend" >> dependency-report.md
+          cd ui/voter_app && npm audit --json | npx -y npm-audit-markdown >> ../../dependency-report.md || true
+          echo "## SDK" >> dependency-report.md
+          cd ../../sdk && npm audit --json | npx -y npm-audit-markdown >> ../dependency-report.md || true
+          echo "## Backend (Rust)" >> dependency-report.md
+          cd ../backend && cargo audit --json >> ../dependency-report.md || true
+          echo "## Contracts" >> dependency-report.md
+          cd ../contracts && npm audit --json | npx -y npm-audit-markdown >> ../dependency-report.md || true
+
+      - name: Upload dependency report
+        uses: actions/upload-artifact@v4.2.0
+        with:
+          name: dependency-report
+          path: dependency-report.md
+          retention-days: 30
+
+  # Static Analysis Job
+  #
+  # This job performs comprehensive static security analysis on the codebase using multiple tools:
+  #
+  # 1. **CodeQL Analysis**:
+  #    - Analyzes TypeScript and Rust code for security vulnerabilities and code quality issues
+  #    - Uses GitHub's security-and-quality query suite
+  #    - Outputs results in SARIF format for integration with GitHub Security tab
+  #
+  # 2. **Slither Analysis**:
+  #    - Performs smart contract security analysis on Solidity contracts
+  #    - Requires Node.js environment to compile contracts with Hardhat
+  #    - Filters out node_modules to focus on project code
+  #    - Outputs results in JSON format for further processing
+  #
+  # **Environment Requirements**:
+  # - Ubuntu latest runner
+  # - Node.js 22 for contract compilation
+  # - Python 3.9 for Slither analyzer
+  #
+  # **Artifacts Generated**:
+  # - CodeQL SARIF results (retained for 30 days)
+  # - Slither JSON output (retained for 30 days)
+  #
+  # **Dependencies**:
+  # - Contracts must be in ./contracts directory
+  # - Hardhat configuration must be present for contract compilation
+  # - Package.json with required dependencies in contracts directory
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+
+      - name: Setup Python
+        uses: actions/setup-python@v4.2.0
+        with:
+          python-version: "3.9"
+
+      - name: Run CodeQL analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: typescript, rust
+          queries: security-and-quality
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "security"
+          output: "codeql-results.sarif"
+
+      - name: Install Slither
+        run: |
+          pip3 install slither-analyzer
+
+      - name: Contract security analysis
+        working-directory: ./contracts
+        run: |
+          npm ci
+          npx hardhat compile
+          slither . --filter-paths "node_modules/" --json slither-output.json
+
+      - name: Upload CodeQL results
+        uses: actions/upload-artifact@v4.2.0
+        with:
+          name: codeql-results
+          path: codeql-results.sarif
+          retention-days: 30
+
+      - name: Upload Slither results
+        uses: actions/upload-artifact@v4.2.0
+        with:
+          name: slither-output
+          path: contracts/slither-output.json
+          retention-days: 30
+
+  # Secret Scan Job
+  #
+  # This job performs security scanning to detect exposed secrets, API keys,
+  # and other sensitive information in the repository codebase.
+  #
+  # Job Details:
+  # - Runs on: Ubuntu latest runner
+  # - Triggers: Based on workflow configuration
+  #
+  # Steps:
+  # 1. Checkout code: Retrieves the latest repository code using actions/checkout@v4.2.2
+  # 2. Run TruffleHog secret scan: Executes TruffleHog security scanner to detect secrets
+  #    - Scans the entire repository (path: ./)
+  #    - Compares changes between main branch and current HEAD
+  #    - Uses the latest version of TruffleHog from trufflesecurity/trufflehog@main
+  #
+  # Security Benefits:
+  # - Prevents accidental exposure of sensitive credentials
+  # - Identifies hardcoded secrets, tokens, and API keys
+  # - Helps maintain secure coding practices
+  # - Provides early detection of security vulnerabilities
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Run TruffleHog secret scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+
+  # Security Testing and Validation Jobs Documentation
+
+  # advanced-fuzzing:
+  #   Purpose: Performs advanced fuzzing tests on smart contracts using multiple fuzzing engines
+  #   - Uses ityFuzz for EVM contract fuzzing with flashloan capabilities and deep analysis
+  #   - Executes ML-guided fuzzing for intelligent test case generation
+  #   - Generates and uploads comprehensive fuzzing reports as artifacts
+  #   - Retention period: 30 days for analysis and compliance tracking
+
+  # penetration-testing:
+  #   Purpose: Conducts comprehensive security penetration testing on the application
+  #   - Spins up isolated testing environment using Docker Compose
+  #   - Performs OWASP ZAP security scans on web application (port 3000)
+  #   - Executes API security testing using Dredd against OpenAPI specifications
+  #   - Simulates smart contract attack vectors and exploitation attempts
+  #   - Consolidates all security findings into unified markdown report
+  #   - Ensures proper environment cleanup after testing completion
+
+  # pqc-validation:
+  #   Purpose: Validates post-quantum cryptography implementation and quantum readiness
+  #   - Tests CRYSTALS-Dilithium digital signature algorithms for quantum resistance
+  #   - Performs signing and verification operations using post-quantum cryptographic keys
+  #   - Generates quantum readiness assessment reports
+  #   - Validates compliance with post-quantum cryptographic standards
+  #   - Uses secure key management through GitHub secrets for PQC operations
+
+  # security-notification:
+  #   Purpose: Aggregates security results and manages incident response workflows
+  #   - Depends on completion of all security testing jobs (uses 'always()' condition)
+  #   - Downloads and consolidates all security reports into comprehensive summary
+  #   - Automatically detects high-severity security issues through pattern matching
+  #   - Creates GitHub issues for critical vulnerabilities using issue templates
+  #   - Sends real-time Slack notifications to security team for urgent issues
+  #   - Implements automated incident response and escalation procedures
+  # advanced-fuzzing:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: "18"
+
+  #     - name: Setup Foundry
+  #       uses: foundry-rs/foundry-toolchain@v1
+  #       with:
+  #         version: nightly
+
+  #     - name: Run contracts through ityFuzz
+  #       working-directory: ./contracts
+  #       run: |
+  #         npm ci
+  #         npm install -g ityfuzz
+  #         ityfuzz evm --flashloan --max-depth 12 --contract contracts/VotingContract.sol
+
+  #     - name: Run ML-guided fuzzing
+  #       working-directory: ./contracts
+  #       run: |
+  #         npm run fuzz:ml-guided
+  #         cat ml-fuzz-results.json | jq > ml-guided-fuzzing-report.json
+
+  #     - name: Upload fuzzing reports
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: fuzzing-reports
+  #         path: |
+  #           contracts/ityfuzz-report.json
+  #           contracts/ml-guided-fuzzing-report.json
+  #         retention-days: 30
+
+  # penetration-testing:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+
+  #     - name: Setup environment
+  #       run: |
+  #         docker-compose -f docker-compose.security.yml up -d
+  #         sleep 30  # Wait for services to start
+
+  #     - name: Run OWASP ZAP scan
+  #       uses: zaproxy/action-full-scan@v0.4.0
+  #       with:
+  #         target: "http://localhost:3000"
+  #         rules_file_name: ".zap/rules.tsv"
+  #         cmd_options: "-a"
+
+  #     - name: Run API security tests
+  #       run: |
+  #         npm install -g dredd
+  #         dredd ./api/openapi.yaml http://localhost:3001 --hookfiles=./api/dredd-hooks.js
+
+  #     - name: Run contract attack simulation
+  #       working-directory: ./security
+  #       run: |
+  #         npm ci
+  #         npm run simulate:attacks
+
+  #     - name: Generate security report
+  #       run: |
+  #         echo "# Security Testing Report" > security-report.md
+  #         echo "## OWASP ZAP Scan Results" >> security-report.md
+  #         cat zap-report.md >> security-report.md
+  #         echo "## API Security Test Results" >> security-report.md
+  #         cat dredd-output.md >> security-report.md
+  #         echo "## Contract Attack Simulation Results" >> security-report.md
+  #         cat security/attack-simulation-results.json | jq >> security-report.md
+
+  #     - name: Upload security report
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: security-report
+  #         path: security-report.md
+  #         retention-days: 30
+
+  #     - name: Cleanup environment
+  #       run: docker-compose -f docker-compose.security.yml down
+
+  # pqc-validation:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: "18"
+
+  #     - name: Install post-quantum packages
+  #       run: |
+  #         npm install -g @zkvote/pqc-tools
+  #         pqc-tools setup
+
+  #     - name: Run PQC tests
+  #       run: |
+  #         cd pqc-tests
+  #         npm ci
+  #         npm test
+
+  #     - name: Test CRYSTALS-Dilithium signing
+  #       run: |
+  #         cd pqc-tests
+  #         pqc-tools sign --algorithm dilithium5 --input test-files/message.txt --output test-files/message.sig --key-id ${{ secrets.PQ_TEST_KEY_ID }}
+  #         pqc-tools verify --algorithm dilithium5 --input test-files/message.txt --signature test-files/message.sig --key-id ${{ secrets.PQ_TEST_KEY_ID }}
+
+  #     - name: Generate PQC validation report
+  #       run: |
+  #         echo "# Post-Quantum Cryptography Validation Report" > pqc-report.md
+  #         echo "## Test Results" >> pqc-report.md
+  #         cat pqc-tests/test-results.json | jq >> pqc-report.md
+  #         echo "## Quantum Readiness Assessment" >> pqc-report.md
+  #         pqc-tools assess --output json | jq >> pqc-report.md
+
+  #     - name: Upload PQC report
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: pqc-report
+  #         path: pqc-report.md
+  #         retention-days: 30
+
+  # security-notification:
+  #   needs:
+  #     [
+  #       dependency-scan,
+  #       static-analysis,
+  #       advanced-fuzzing,
+  #       penetration-testing,
+  #       pqc-validation,
+  #     ]
+  #   runs-on: ubuntu-latest
+  #   if: always()
+  #   steps:
+  #     - name: Download dependency report
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: dependency-report
+
+  #     - name: Download security report
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: security-report
+
+  #     - name: Download PQC report
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: pqc-report
+
+  #     - name: Process security reports
+  #       run: |
+  #         cat dependency-report.md security-report.md pqc-report.md > full-security-report.md
+  #         # Check for high severity issues
+  #         if grep -q "High" full-security-report.md; then
+  #           echo "HIGH_SEVERITY_ISSUES=true" >> $GITHUB_ENV
+  #         else
+  #           echo "HIGH_SEVERITY_ISSUES=false" >> $GITHUB_ENV
+  #         fi
+
+  #     - name: Create GitHub issue for high severity
+  #       if: env.HIGH_SEVERITY_ISSUES == 'true'
+  #       uses: JasonEtco/create-an-issue@v2
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         filename: .github/SECURITY_ISSUE_TEMPLATE.md
+  #         update_existing: true
+
+  #     - name: Notify security team
+  #       if: env.HIGH_SEVERITY_ISSUES == 'true'
+  #       uses: slackapi/slack-github-action@v1.24.0
+  #       with:
+  #         payload: |
+  #           {
+  #             "text": "⚠️ High severity security issues found in zkVote",
+  #             "blocks": [
+  #               {
+  #                 "type": "section",
+  #                 "text": {
+  #                   "type": "mrkdwn",
+  #                   "text": "⚠️ *High severity security issues detected in zkVote security scan*\n*Repository:* ${{ github.repository }}\n*Scan Date:* ${{ github.event.repository.updated_at }}"
+  #                 }
+  #               },
+  #               {
+  #                 "type": "section",
+  #                 "text": {
+  #                   "type": "mrkdwn",
+  #                   "text": "Please review the security reports and take appropriate action."
+  #                 }
+  #               }
+  #             ]
+  #           }
+  #       env:
+  #         SLACK_WEBHOOK_URL: ${{ secrets.SECURITY_SLACK_WEBHOOK_URL }}
+  #         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
