@@ -1,0 +1,521 @@
+# Frontend CI/CD Workflow
+#
+# This workflow handles continuous integration and deployment for the frontend components
+# of the zkVote application. It is triggered when changes are made to the voter UI or SDK.
+#
+# Triggers:
+# - Push events to 'main' or 'dev' branches affecting frontend code
+# - Pull requests targeting 'main' or 'dev' branches affecting frontend code
+#
+# Monitored paths:
+# - ui/voter_app/**: All files in the voter application UI directory
+# - sdk/**: All files in the SDK directory
+#
+# This ensures the workflow only runs when frontend-related code changes,
+# optimizing CI/CD resource usage and build times.
+name: Frontend CI/CD
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "ui/voter_app/**"
+      - "sdk/**"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "ui/voter_app/**"
+      - "sdk/**"
+jobs:
+  # Frontend Build Job
+  #
+  # This job builds the frontend application for the zkVote project.
+  # It performs the following steps:
+  # 1. Checks out the repository code
+  # 2. Sets up Node.js environment with npm caching
+  # 3. Installs frontend dependencies using npm ci
+  # 4. Builds and links the SDK dependency from the local workspace
+  # 5. Links the built SDK to the frontend project
+  # 6. Builds the frontend application
+  # 7. Generates a SHA256 hash of the build output for integrity verification
+  # 8. Uploads the built frontend artifacts with 7-day retention
+  #
+  # Working Directory: ./ui/voter_app
+  # Node.js Version: 22
+  # Build Output: dist/ directory
+  # Artifacts: frontend-build (retained for 7 days)
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ui/voter_app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            ui/voter_app/package-lock.json
+            sdk/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Build SDK
+        run: |
+          cd ../../sdk
+          npm ci
+          npm run build
+          npm link
+
+      - name: Link SDK to frontend
+        run: |
+          npm link @zkvote/sdk
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Generate build hash
+        id: hash
+        run: |
+          find dist -type f -exec sha256sum {} \; | sort | sha256sum | cut -d ' ' -f1 > build-hash.txt
+          HASH=$(cat build-hash.txt)
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: frontend-build
+          path: ui/voter_app/dist/
+          retention-days: 7
+
+  # Test Job Documentation
+  #
+  # This job performs comprehensive testing of the frontend voter application.
+  # It depends on the build job to complete successfully before running.
+  #
+  # Job Configuration:
+  # - Runs on: Ubuntu Latest
+  # - Working Directory: ./ui/voter_app
+  # - Dependencies: Requires 'build' job to complete
+  #
+  # Steps Overview:
+  # 1. Checkout code from repository
+  # 2. Set up Node.js v22 with npm caching
+  # 3. Install frontend dependencies using npm ci
+  # 4. Build and link the ZKVote SDK locally
+  # 5. Link the SDK to the frontend application
+  # 6. Run ESLint code quality checks
+  # 7. Execute unit tests
+  # 8. Execute component tests
+  # 9. Run mutation tests with quality gates:
+  #    - Fails if mutation tests don't pass
+  #    - Requires mutation score >= 90%
+  # 10. Upload test coverage results as artifacts
+  #
+  # Quality Gates:
+  # - All linting must pass
+  # - All unit and component tests must pass
+  # - Mutation testing must achieve minimum 90% score
+  # - Test artifacts retained for 7 days
+  #
+  # Artifacts:
+  # - Test results and coverage reports uploaded to 'test-results'
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ui/voter_app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            ui/voter_app/package-lock.json
+            sdk/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Build and link SDK
+        run: |
+          cd ../../sdk
+          npm ci
+          npm run build
+          npm link
+
+      - name: Link SDK to frontend
+        run: npm link @zkvote/sdk
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run component tests
+        run: npm run test:component
+
+      - name: Run Lighthouse CI
+        run: npm run lighthouse:ci
+
+      - name: Visual regression tests
+        run: npm run test:visual
+
+      - name: Run mutation tests
+        run: |
+          npm run test:mutation
+          if [ $? -ne 0 ]; then
+            echo "Mutation tests failed"
+            exit 1
+          fi
+          if [ ! -f mutation-report.json ]; then
+            echo "Mutation report not found"
+            exit 1
+          fi
+          SCORE=$(cat mutation-report.json | jq -r '.mutationScore')
+          if [ $(echo "$SCORE < 90" | awk '{print ($1 < $2)}') -eq 1 ]; then
+            echo "Mutation score is below 90%: $SCORE"
+            exit 1
+          fi
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: test-results
+          path: ui/voter_app/coverage/
+          retention-days: 7
+
+  # Security Job
+  #
+  # This job performs security scanning and vulnerability assessment on the frontend application.
+  # It runs after the test job completes successfully and focuses on identifying potential
+  # security issues in the React/Node.js voter application.
+  #
+  # Dependencies:
+  # - Requires 'test' job to complete successfully
+  # - Uses Node.js 22 with npm caching for faster builds
+  #
+  # Security Checks Performed:
+  # 1. Dependency Audit - Scans npm packages for known vulnerabilities (high severity)
+  # 2. SAST (Static Application Security Testing) - Uses ESLint with SARIF output format
+  #    to identify potential security issues in JavaScript/TypeScript source code
+  #
+  # Optional (Commented):
+  # - AI-powered security scanning using CertIK scanner
+  # - SARIF report upload to GitHub Security tab for vulnerability tracking
+  #
+  # Working Directory: ./ui/voter_app
+  # Platform: Ubuntu Latest
+  # Continue on Error: Enabled for dependency audit to prevent build failures
+  security:
+    needs: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ui/voter_app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            ui/voter_app/package-lock.json
+            sdk/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Run dependency audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Run SAST scan
+        run: |
+          npx eslint src/ --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif
+        continue-on-error: true
+
+      # - name: RUN AI-powered security scan
+      #   run: |
+      #     npm install -g @certik/scanner
+      #     certik-scan --target ./src --report-format sarif --output ./certik-report.sarif
+      #   env:
+      #     CERTIK_API_KEY: ${{ secrets.CERTIK_API_KEY }}
+
+      # - name: Upload security report
+      #   uses: github/codeql-action/upload-sarif@v2
+      #   with:
+      #     sarif_file: ./ui/voter_app/certik-report.sarif
+      #     category: certik-ai
+
+  # Compliance Job Documentation
+  #
+  # This job performs compliance checks for the frontend voter application including:
+  # - GDPR (General Data Protection Regulation) compliance verification
+  # - Web accessibility standards validation
+  # - Compliance report generation and artifact storage
+  #
+  # Prerequisites:
+  # - Requires successful completion of the 'security' job
+  # - Node.js 22 environment with npm package manager
+  # - Package.json scripts: 'compliance:gdpr' and 'compliance:accessibility'
+  #
+  # Outputs:
+  # - compliance-report.md artifact containing GDPR and accessibility results
+  # - Artifact retained for 30 days for compliance auditing purposes
+  #
+  # Working Directory: ./ui/voter_app
+  # Dependencies: Installs from package-lock.json using npm ci for reproducible builds
+  compliance:
+    needs: security
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ui/voter_app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            ui/voter_app/package-lock.json
+            sdk/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Run GDPR compliance check
+        run: npm run compliance:gdpr
+
+      - name: Run accessibility check
+        run: npm run compliance:accessibility
+
+      - name: Generate compliance report
+        run: |
+          echo "# Compliance Report" > compliance-report.md
+          echo "## GDPR" >> compliance-report.md
+          if [ -f gdpr-report.json ]; then
+            cat gdpr-report.json | jq >> compliance-report.md
+          else
+            echo "No GDPR report found" >> compliance-report.md
+          fi
+          echo "## Accessibility" >> compliance-report.md
+          if [ -f accessibility-report.json ]; then
+            cat accessibility-report.json | jq >> compliance-report.md
+          else
+            echo "No accessibility report found" >> compliance-report.md
+          fi
+
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: compliance-report
+          path: ui/voter_app/compliance-report.md
+          retention-days: 30
+
+  # Deploy Preview Job
+  #
+  # This job deploys the frontend application to a Vercel preview environment
+  # when a pull request is created or updated. It depends on successful completion
+  # of build, test, security, and compliance jobs.
+  #
+  # Triggers:
+  # - Only runs on pull request events
+  # - Requires all prerequisite jobs to pass
+  #
+  # Environment: preview
+  # Runner: ubuntu-latest
+  #
+  # Steps:
+  # 1. Checks out the repository code
+  # 2. Downloads the build artifacts from the build job
+  # 3. Installs Vercel CLI globally
+  # 4. Deploys the application to Vercel preview environment
+  #
+  # Required Secrets:
+  # - VERCEL_TOKEN: Authentication token for Vercel CLI
+  # - VERCEL_ORG_ID: Organization ID for Vercel deployment
+  # - VERCEL_PROJECT_ID: Project ID for Vercel deployment
+  #
+  # Artifacts Used:
+  # - frontend-build: Built application files from the build job
+  deploy-preview:
+    if: github.event_name == 'pull_request'
+    needs: [build, test, security, compliance]
+    runs-on: ubuntu-latest
+    environment: preview
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: frontend-build
+          path: ui/voter_app/dist/
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel Preview
+        run: |
+          cd ui/voter_app
+          vercel --token ${{ secrets.VERCEL_TOKEN }} --confirm
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  # Deploy Frontend to Staging Environment
+  #
+  # This job deploys the frontend application to the staging environment when code is pushed to the 'dev' branch.
+  # It performs the following operations:
+  #
+  # Prerequisites:
+  # - Runs only on 'dev' branch pushes
+  # - Requires successful completion of build, test, security, and compliance jobs
+  # - Uses the 'staging' environment protection rules
+  #
+  # Steps:
+  # 1. Checks out the repository code
+  # 2. Downloads the pre-built frontend artifacts from the build job
+  # 3. Registers the deployment on blockchain for verification and audit trail
+  #    - Uses Sepolia testnet for staging deployments
+  #    - Records deployment metadata in the registry contract
+  # 4. Installs Vercel CLI for deployment
+  # 5. Deploys the application to Vercel staging environment
+  #
+  # Environment Variables Required:
+  # - VERCEL_TOKEN: Authentication token for Vercel deployments
+  # - VERCEL_ORG_ID: Organization ID for Vercel project
+  # - VERCEL_PROJECT_ID: Project ID for Vercel deployment
+  # - REGISTRY_CONTRACT_ADDRESS: Smart contract address for deployment registry
+  #
+  # Artifacts Used:
+  # - frontend-build: Contains the compiled frontend application
+  deploy-staging:
+    if: github.ref == 'refs/heads/dev'
+    needs: [build, test, security, compliance]
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: frontend-build
+          path: ui/voter_app/dist/
+
+      - name: Register build on blockchain
+        uses: ./.github/actions/blockchain-verification
+        with:
+          artifacts-path: ./ui/voter_app/dist/
+          network: sepolia
+          registry-contract: ${{ secrets.REGISTRY_CONTRACT_ADDRESS }}
+          operation: "deploy"
+          environment: "staging"
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel Staging
+        run: |
+          cd ui/voter_app
+          vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --confirm
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  # Deploy Production Job
+  #
+  # This job handles the production deployment of the frontend application with advanced security measures.
+  # It only runs on the main branch after all prerequisite jobs (build, test, security, compliance) complete successfully.
+  #
+  # Security Features:
+  # - Quantum-resistant cryptographic signing using Dilithium5 algorithm
+  # - Blockchain-based build verification and registration on mainnet
+  # - Secure artifact handling with post-quantum cryptography
+  #
+  # Prerequisites:
+  # - Requires successful completion of build, test, security, and compliance jobs
+  # - Only triggered on pushes to the main branch
+  # - Uses production environment protection rules
+  #
+  # Secrets Required:
+  # - QUANTUM_KEY_ID: Identifier for the quantum-resistant signing key
+  # - REGISTRY_CONTRACT_ADDRESS: Blockchain contract address for build registration
+  # - VERCEL_TOKEN: Authentication token for Vercel deployment
+  # - VERCEL_ORG_ID: Vercel organization identifier
+  # - VERCEL_PROJECT_ID: Vercel project identifier
+  #
+  # Artifacts:
+  # - Downloads frontend-build artifacts from previous build job
+  # - Signs artifacts using post-quantum cryptography
+  # - Registers deployment metadata on blockchain for immutable audit trail
+  #
+  # Deployment:
+  # - Deploys to Vercel production environment
+  # - Uses Vercel CLI for deployment automation
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    needs: [build, test, security, compliance]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: frontend-build
+          path: ui/voter_app/dist/
+
+      - name: Sign with quantum resistant signature
+        uses: ./.github/actions/pqc-sign
+        with:
+          artifacts-path: ./ui/voter_app/dist/
+          key-id: ${{ secrets.QUANTUM_KEY_ID }}
+          algorithm: "dilithium5"
+
+      - name: Register build on blockchain
+        uses: ./.github/actions/blockchain-verification
+        with:
+          artifacts-path: ./ui/voter_app/dist/
+          network: mainnet
+          registry-contract: ${{ secrets.REGISTRY_CONTRACT_ADDRESS }}
+          operation: "deploy"
+          environment: "production"
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel Production
+        run: |
+          cd ui/voter_app
+          vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --confirm
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
