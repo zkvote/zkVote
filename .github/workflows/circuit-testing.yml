@@ -1,0 +1,175 @@
+# This workflow automatically runs ZK circuit tests when changes are made to the circuits directory.
+#
+# Triggers:
+# - Push events to main or dev branches that modify files in the circuits/ directory
+# - Pull requests targeting main or dev branches that modify files in the circuits/ directory
+#
+# The workflow only executes when circuit-related files are changed, optimizing CI/CD performance
+# by avoiding unnecessary test runs for unrelated changes.
+name: ZK Circuit Testing
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "circuits/**"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "circuits/**"
+jobs:
+  # Circuit Compilation Job
+  #
+  # This job compiles zero-knowledge proof circuits using the Circom compiler.
+  # It runs in a containerized environment with pre-installed Circom tools.
+  #
+  # Steps:
+  # 1. Checks out the repository code
+  # 2. Installs Node.js dependencies for the project
+  # 3. Compiles circuits using a custom script and stores output in build/circuits
+  # 4. Uploads compiled circuit artifacts for use by other jobs or workflows
+  #
+  # Artifacts:
+  # - Name: compiled-circuits
+  # - Contains: Compiled circuit files from build/circuits directory
+  # - Retention: 7 days
+  #
+  # Requirements:
+  # - ./scripts/compile-circuits.sh must exist and be executable
+  # - package.json with circom-related dependencies
+  compile-circuits:
+    runs-on: ubuntu-latest
+    container:
+      image: hermeznetwork/circom:2.2.1
+    defaults:
+      run:
+        working-directory: ./circuits
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile Circuits
+        run: |
+          mkdir -p build/circuits
+          ./scripts/compile-circuits.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: compiled-circuits
+          path: build/circuits
+          retention-days: 7
+
+  # Test Circuits Job
+  #
+  # This job runs the circuit testing suite after the circuits have been compiled.
+  # It depends on the compile-circuits job and uses the compiled circuit artifacts.
+  #
+  # Steps:
+  # 1. Checks out the repository code
+  # 2. Sets up Node.js v22 with npm caching enabled
+  # 3. Installs project dependencies using npm ci for faster, reliable builds
+  # 4. Downloads the compiled circuit artifacts from the previous job
+  # 5. Executes the circuit test suite using the npm test:circuits script
+  #
+  # Dependencies: compile-circuits job must complete successfully
+  # Artifacts used: compiled-circuits (downloaded to build/circuits directory)
+  test-circuits:
+    needs: compile-circuits
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./circuits
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: circuits/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download compiled circuits
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: compiled-circuits
+          path: build/circuits
+
+      - name: Run Circuit Tests
+        run: npm run test:circuits
+
+  # Circuit Fuzzing Job
+  #
+  # This job performs comprehensive fuzz testing on compiled ZK circuits to identify
+  # potential vulnerabilities, edge cases, and constraint violations.
+  #
+  # Dependencies:
+  #   - compile-circuits: Requires compiled circuits from previous job
+  #
+  # Workflow:
+  #   1. Sets up Ubuntu environment with Node.js 22
+  #   2. Downloads compiled circuits from previous job artifacts
+  #   3. Executes ZK circuit fuzzer with 10,000 iterations
+  #   4. Generates markdown report from fuzzing results JSON
+  #   5. Uploads fuzzing report as artifact (retained for 14 days)
+  #
+  # Outputs:
+  #   - circuit-fuzzing-report: Markdown report containing fuzzing analysis
+  #
+  # Security Testing:
+  #   - Tests circuit constraints under various input conditions
+  #   - Validates circuit behavior with edge case inputs
+  #   - Identifies potential arithmetic overflow/underflow issues
+  #   - Verifies circuit soundness and completeness properties
+  circuit-fuzzing:
+    needs: compile-circuits
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./circuits
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: circuits/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download compiled circuits
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: compiled-circuits
+          path: build/circuits
+
+      - name: Run ZK Circuit Fuzzer
+        run: npm run fuzz:circuits -- --iterations 10000
+
+      - name: Generate fuzzing report
+        run: |
+          echo "# ZK Circuit Fuzzing Report" > circuit-fuzzing-report.md
+          if [ -f zk-fuzzing-results.json ]; then
+            echo "## Fuzzing Results" >> circuit-fuzzing-report.md
+            cat zk-fuzzing-results.json | jq >> circuit-fuzzing-report.md
+          else
+            echo "No fuzzing results found" >> circuit-fuzzing-report.md
+          fi
+
+      - name: Upload Fuzzing Report
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: circuit-fuzzing-report
+          path: circuit-fuzzing-report.md
+          retention-days: 14
