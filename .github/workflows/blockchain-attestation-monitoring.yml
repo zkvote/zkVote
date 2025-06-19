@@ -1,0 +1,100 @@
+# This workflow, "Blockchain Attestation Monitoring", is designed to automate the verification and reporting of blockchain attestations.
+#
+# **Triggers:**
+# - Scheduled to run every 6 hours via cron.
+# - Can also be triggered manually using the workflow_dispatch event.
+#
+# **Workflow Steps:**
+# 1. **Checkout code:** Retrieves the repository code with full history.
+# 2. **Setup Node.js:** Configures the Node.js environment (version 22).
+# 3. **Install dependencies:** Installs required Node.js packages in the `tools` directory.
+# 4. **Verify production attestations:** Runs attestation verification for the production environment using secrets for configuration.
+# 5. **Verify staging attestations:** Runs attestation verification for the staging environment using the same secrets.
+# 6. **Generate attestation report:** Produces a report summarizing attestation results.
+# 7. **Check for attestation issues:** Analyzes the generated issues file and sets an environment variable if any issues are found.
+# 8. **Send attestation report:** Sends the attestation report to a Slack channel via webhook.
+# 9. **Create GitHub issue for attestation problems:** If issues are detected, creates or updates a GitHub issue using a predefined template.
+#
+# **Secrets Required:**
+# - `INFURA_API_KEY`: API key for Infura to interact with the blockchain.
+# - `REGISTRY_CONTRACT_ADDRESS`: Address of the registry contract to verify attestations.
+# - `ATTESTATION_REPORT_WEBHOOK_URL`: Slack webhook URL for sending reports.
+# - `GITHUB_TOKEN`: Token for creating or updating GitHub issues.
+#
+# This workflow helps ensure the integrity of blockchain attestations by providing automated, regular checks and notifications.
+name: Blockchain Attestation Monitoring
+# This GitHub Actions workflow is triggered in two ways:
+# 1. On a schedule: It runs automatically every 6 hours, as specified by the cron expression "0 */6 * * *".
+# 2. Manually: It can be triggered manually using the workflow_dispatch event.
+on:
+  schedule:
+    - cron: "0 */6 * * *" # Every 6 hours
+  workflow_dispatch:
+jobs:
+  verify-attestations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: |
+          cd tools
+          npm ci
+
+      - name: Verify production attestations
+        run: |
+          cd tools
+          node verify-blockchain-attestations.js --env production
+        env:
+          INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
+          REGISTRY_CONTRACT: ${{ secrets.REGISTRY_CONTRACT_ADDRESS }}
+
+      - name: Verify staging attestations
+        run: |
+          cd tools
+          node verify-blockchain-attestations.js --env staging
+        env:
+          INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
+          REGISTRY_CONTRACT: ${{ secrets.REGISTRY_CONTRACT_ADDRESS }}
+
+      - name: Generate attestation report
+        run: |
+          cd tools
+          node generate-attestation-report.js
+        env:
+          INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
+          REGISTRY_CONTRACT: ${{ secrets.REGISTRY_CONTRACT_ADDRESS }}
+
+      - name: Check for attestation issues
+        run: |
+          ATTESTATION_ISSUES=$(cat ./tools/attestation-issues.json | jq 'length')
+          if [[ $ATTESTATION_ISSUES -gt 0 ]]; then
+            echo "ATTESTATION_ISSUES=true" >> $GITHUB_ENV
+          else
+            echo "ATTESTATION_ISSUES=false" >> $GITHUB_ENV
+          fi
+
+      - name: Send attestation report
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          payload-file-path: ./tools/attestation-report.json
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ATTESTATION_REPORT_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Create GitHub issue for attestation problems
+        if: env.ATTESTATION_ISSUES == 'true'
+        uses: JasonEtco/create-an-issue@v2.9.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/ATTESTATION_ISSUE_TEMPLATE.md
+          update_existing: true
