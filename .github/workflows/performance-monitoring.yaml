@@ -1,0 +1,119 @@
+# Performance Monitoring Workflow
+#
+# This GitHub Actions workflow automates the monitoring of application performance across multiple layers:
+# - API endpoints
+# - Frontend (using Lighthouse)
+# - Smart contract gas usage
+# - Cross-chain interactions
+#
+# Trigger:
+#   - Scheduled to run every 2 hours via cron.
+#   - Can also be triggered manually via the GitHub Actions UI.
+#
+# Steps:
+#   1. Checkout repository code.
+#   2. Set up Node.js environment with npm caching.
+#   3. Install dependencies for performance scripts.
+#   4. Run API performance tests (using a custom script).
+#   5. Run frontend performance tests with Lighthouse and upload artifacts.
+#   6. Run smart contract gas benchmarks (requires Infura API key).
+#   7. Run cross-chain performance tests (requires Infura and Alchemy API keys).
+#   8. Analyze all collected performance results.
+#   9. Check for detected performance issues and set a workflow environment variable accordingly.
+#  10. Always send a performance report to Slack via webhook.
+#  11. If performance issues are detected, automatically create or update a GitHub issue using a predefined template.
+#
+# Secrets required:
+#   - INFURA_API_KEY: For smart contract and cross-chain tests.
+#   - ALCHEMY_API_KEY: For cross-chain tests.
+#   - PERFORMANCE_REPORT_WEBHOOK_URL: Slack webhook for reporting.
+#   - GITHUB_TOKEN: For creating/updating GitHub issues.
+#
+# Artifacts:
+#   - Performance logs and reports are generated in the ./performance/logs directory.
+#
+# Notes:
+#   - The workflow is designed to provide continuous insight into the application's performance and alert the team to regressions or issues.
+#   - All scripts referenced are expected to be located in the ./performance/scripts directory.
+name: Performance Monitoring
+# This workflow is triggered automatically every 2 hours using a cron schedule,
+# and can also be triggered manually via the GitHub Actions UI (workflow_dispatch).
+on:
+  schedule:
+    - cron: "0 */2 * * *" # Every 2 hours
+  workflow_dispatch:
+jobs:
+  monitor-performance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./performance
+
+      - name: Run API performance tests
+        run: node scripts/api-performance.js
+        working-directory: ./performance
+        env:
+          API_URL: https://api.zkvote.io
+
+      - name: Run frontend performance tests
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            https://zkvote.io
+          uploadArtifacts: true
+
+      - name: Run smart contract gas benchmarks
+        run: node scripts/gas-benchmarks.js
+        working-directory: ./performance
+        env:
+          INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
+
+      - name: Run cross-chain performance tests
+        run: node scripts/cross-chain-performance.js
+        working-directory: ./performance
+        env:
+          INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+
+      - name: Analyze results
+        run: node scripts/analyze-performance.js
+        working-directory: ./performance
+
+      - name: Check for performance issues
+        run: |
+          PERF_ISSUES=$(cat ./performance/logs/performance-issues.json | jq 'length')
+          if [[ $PERF_ISSUES -gt 0 ]]; then
+            echo "PERFORMANCE_ISSUES=true" >> $GITHUB_ENV
+          else
+            echo "PERFORMANCE_ISSUES=false" >> $GITHUB_ENV
+          fi
+
+      - name: Send performance report
+        if: always()
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          payload-file-path: ./performance/logs/performance-report.json
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.PERFORMANCE_REPORT_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Create GitHub issue for performance problems
+        if: env.PERFORMANCE_ISSUES == 'true'
+        uses: JasonEtco/create-an-issue@v2.9.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/PERFORMANCE_ISSUE_TEMPLATE.md
+          update_existing: true

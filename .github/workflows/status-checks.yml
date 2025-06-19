@@ -1,0 +1,154 @@
+# Workflow Name: Status Checks
+#
+# Overview:
+# This GitHub Actions workflow performs automated health checks on the zkVote production environment.
+# It monitors the API, frontend, bridge, and PQC (Post-Quantum Cryptography) services.
+# If any service is unhealthy, it creates a GitHub issue and sends an alert to Slack.
+#
+# Triggers:
+# - Scheduled: Runs every 15 minutes via cron.
+# - Manual: Can be triggered manually using the workflow_dispatch event.
+#
+# Jobs:
+# - check-production:
+#     - Runs on: ubuntu-latest
+#     - Steps:
+#         1. Check API health by sending a request to https://api.zkvote.io/health.
+#         2. Check frontend health by sending a request to https://zkvote.io.
+#         3. Check bridge status by sending a request to https://api.zkvote.io/bridge/health.
+#         4. Check PQC readiness by sending a request to https://api.zkvote.io/security/pqc-status.
+#         5. If any check fails:
+#             - Create or update a GitHub issue using a template.
+#             - Send a Slack alert with the status of each service.
+#
+# Secrets Required:
+# - GITHUB_TOKEN: For creating/updating GitHub issues.
+# - ALERT_SLACK_WEBHOOK_URL: For sending Slack alerts.
+#
+# Customization:
+# - Update the URLs or add/remove checks as needed for your environment.
+# - Modify the Slack message or GitHub issue template for your team's requirements.
+name: Status Checks
+# This GitHub Actions workflow is triggered in two ways:
+# 1. On a schedule: It runs automatically every 15 minutes, as specified by the cron expression "*/15 * * * *".
+# 2. Manually: It can be triggered manually using the workflow_dispatch event.
+on:
+  schedule:
+    - cron: "*/15 * * * *" # Every 15 minutes
+  workflow_dispatch:
+
+jobs:
+  check-production:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check API health
+        id: api-health
+        run: |
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.zkvote.io/health)
+          if [[ $HEALTH_STATUS != 200 ]]; then
+            echo "API health check failed with status $HEALTH_STATUS"
+            echo "api_healthy=false" >> $GITHUB_ENV
+          else
+            echo "api_healthy=true" >> $GITHUB_ENV
+          fi
+
+      - name: Check frontend
+        id: frontend-health
+        run: |
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://zkvote.io)
+          if [[ $FRONTEND_STATUS != 200 ]]; then
+            echo "Frontend check failed with status $FRONTEND_STATUS"
+            echo "frontend_healthy=false" >> $GITHUB_ENV
+          else
+            echo "frontend_healthy=true" >> $GITHUB_ENV
+          fi
+
+      - name: Check bridge status
+        id: bridge-health
+        run: |
+          BRIDGE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.zkvote.io/bridge/health)
+          if [[ $BRIDGE_STATUS != 200 ]]; then
+            echo "Bridge check failed with status $BRIDGE_STATUS"
+            echo "bridge_healthy=false" >> $GITHUB_ENV
+          else
+            echo "bridge_healthy=true" >> $GITHUB_ENV
+          fi
+
+      - name: Check PQC readiness
+        id: pqc-health
+        run: |
+          PQC_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.zkvote.io/security/pqc-status)
+          if [[ $PQC_STATUS != 200 ]]; then
+            echo "PQC check failed with status $PQC_STATUS"
+            echo "pqc_healthy=false" >> $GITHUB_ENV
+          else
+            echo "pqc_healthy=true" >> $GITHUB_ENV
+          fi
+
+      - name: Create GitHub issue for failed checks
+        if: env.api_healthy == 'false' || env.frontend_healthy == 'false' || env.bridge_healthy == 'false' || env.pqc_healthy == 'false'
+        uses: JasonEtco/create-an-issue@v2.9.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API_HEALTHY: ${{ env.api_healthy }}
+          FRONTEND_HEALTHY: ${{ env.frontend_healthy }}
+          BRIDGE_HEALTHY: ${{ env.bridge_healthy }}
+          PQC_HEALTHY: ${{ env.pqc_healthy }}
+        with:
+          filename: .github/STATUS_CHECK_TEMPLATE.md
+          update_existing: true
+
+      - name: Send alert on failure
+        if: env.api_healthy == 'false' || env.frontend_healthy == 'false' || env.bridge_healthy == 'false' || env.pqc_healthy == 'false'
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          payload: |
+            {
+              "text": "⚠️ zkVote Production Status Alert",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "⚠️ *zkVote Production Status Alert*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*API:* ${{ env.api_healthy == 'true' && '✅ Healthy' || '❌ Down' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Frontend:* ${{ env.frontend_healthy == 'true' && '✅ Healthy' || '❌ Down' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Bridge:* ${{ env.bridge_healthy == 'true' && '✅ Healthy' || '❌ Down' }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*PQC Services:* ${{ env.pqc_healthy == 'true' && '✅ Healthy' || '❌ Down' }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Status Dashboard"
+                      },
+                      "url": "https://status.zkvote.io"
+                    }
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ALERT_SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

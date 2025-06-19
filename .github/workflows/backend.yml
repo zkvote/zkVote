@@ -1,0 +1,401 @@
+# Backend CI/CD Workflow Documentation
+#
+# Overview:
+# This GitHub Actions workflow provides comprehensive CI/CD pipeline for a Rust-based backend application
+# in the zkVote project. The workflow implements industry best practices for code quality, security,
+# testing, and deployment automation.
+#
+# Workflow Structure:
+# The pipeline consists of multiple sequential jobs that ensure code quality and reliability:
+#
+# 1. lint-format-check: Code quality validation (formatting, linting, compilation checks)
+# 2. test: Comprehensive testing suite with coverage reporting and benchmarks
+# 3. security: Security vulnerability scanning and policy enforcement
+# 4. build-docker: Container image building with caching optimization
+# 5. deploy-staging/deploy-production: Environment-specific deployments (commented out)
+#
+# Trigger Conditions:
+# - Push events to 'main' and 'dev' branches affecting backend/** files
+# - Pull request events targeting 'main' and 'dev' branches affecting backend/** files
+# - Path filtering ensures workflow only runs for backend-related changes
+#
+# Environment Configuration:
+# - Rust version: 1.86 (configurable via RUST_VERSION environment variable)
+# - Colored Cargo output enabled for better CI/CD visibility
+# - Ubuntu-latest runner for all jobs
+# - Working directory set to ./backend for all operations
+#
+# Key Features:
+# - Parallel job execution where possible with proper dependency management
+# - Comprehensive caching strategy for Cargo dependencies and build artifacts
+# - Security-first approach with vulnerability scanning and policy enforcement
+# - Code coverage reporting with Codecov integration
+# - Performance benchmarking capabilities
+# - Docker containerization with BuildKit caching
+# - Branch-specific deployment strategies
+#
+# Cache Strategy:
+# Each job implements optimized caching for:
+# - Cargo binaries (~/.cargo/bin/)
+# - Registry index and cache (~/.cargo/registry/)
+# - Git database (~/.cargo/git/db/)
+# - Build artifacts (backend/target/)
+# - Docker build layers (GitHub Actions cache)
+#
+# Security Measures:
+# - cargo-audit for dependency vulnerability scanning
+# - cargo-deny for licensing and security policy enforcement
+# - Security job runs after tests to ensure quality before security validation
+# - Warnings treated as errors for strict security compliance
+#
+# Quality Gates:
+# All jobs must pass for successful pipeline completion:
+# - Code formatting must comply with rustfmt standards
+# - Clippy linting must pass with zero warnings
+# - All tests must pass with adequate coverage
+# - Security audits must show no vulnerabilities
+# - Docker image must build successfully
+#
+# Deployment Strategy:
+# - Staging deployment: Triggered on 'dev' branch pushes
+# - Production deployment: Triggered on 'main' branch pushes
+# - Requires successful completion of all quality and security checks
+# - Currently configured as templates (commented out) for implementation
+name: Backend CI/CD
+# Backend CI/CD Workflow
+#
+# This workflow triggers on:
+# - Push events to main and dev branches when changes are made to backend/** files
+# - Pull request events targeting main and dev branches when changes are made to backend/** files
+#
+# The path filter ensures this workflow only runs when backend-related files are modified,
+# optimizing CI/CD resource usage by avoiding unnecessary runs for frontend or other changes.
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "backend/**"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "backend/**"
+# Environment variables configuration for the backend workflow
+#
+# CARGO_TERM_COLOR: Enables colored output for Cargo commands in CI/CD pipeline
+# RUST_VERSION: Specifies the Rust toolchain version to use for builds and tests
+env:
+  CARGO_TERM_COLOR: always
+  RUST_VERSION: "1.86"
+jobs:
+  # Lint and Format Check Job
+  #
+  # This job performs code quality checks on the Rust backend codebase including:
+  # - Code formatting verification using `cargo fmt`
+  # - Linting and static analysis using `cargo clippy`
+  # - Quick compilation check using `cargo check`
+  #
+  # The job runs on Ubuntu and includes:
+  # - System dependency installation (SSL, pkg-config, build tools)
+  # - Rust toolchain setup with specified version
+  # - Cargo dependency caching for faster builds
+  # - Strict formatting and linting enforcement (treats warnings as errors)
+  #
+  # All operations are performed in the ./backend directory with full feature flags enabled.
+  lint-format-check:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev pkg-config build-essential
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          override: true
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4.2.3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            backend/target/
+          key: ${{ runner.os }}-cargo-lint-${{ hashFiles('backend/Cargo.toml', 'backend/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-lint-
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run Cargo Check (Quick Compile)
+        run: cargo check --all-targets --all-features
+
+  # Test Suite Job
+  #
+  # This job runs the comprehensive test suite for the Rust backend application.
+  # It performs the following operations:
+  #
+  # Dependencies:
+  # - Requires the lint-format-check job to pass before execution
+  # - Runs on Ubuntu latest with working directory set to ./backend
+  #
+  # Steps performed:
+  # 1. Checks out the repository code
+  # 2. Installs required system dependencies (OpenSSL, pkg-config, build tools)
+  # 3. Sets up Rust toolchain using the version specified in RUST_VERSION environment variable
+  # 4. Caches Cargo dependencies and build artifacts to speed up subsequent runs
+  # 5. Executes all tests with verbose output across all targets and features
+  # 6. Generates test coverage report using cargo-tarpaulin in XML format
+  # 7. Uploads coverage data to Codecov with backend flag for tracking
+  # 8. Runs performance benchmarks using cargo bench
+  #
+  # Cache Strategy:
+  # - Caches Cargo binaries, registry, git database, and target directory
+  # - Uses cache key based on OS and hash of Cargo.toml/Cargo.lock files
+  # - Implements fallback cache restoration for improved build times
+  #
+  # Coverage:
+  # - Generates cobertura.xml format coverage report
+  # - Configured with 120-second timeout for coverage analysis
+  # - Covers entire workspace with all features enabled
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    needs: lint-format-check
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev pkg-config build-essential
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          override: true
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4.2.3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            backend/target/
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('backend/Cargo.toml', 'backend/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-test-
+
+      - name: Run tests
+        run: cargo test --all-targets --all-features --verbose
+
+      - name: Generate test coverage
+        run: |
+          cargo install cargo-tarpaulin
+          cargo tarpaulin --all-features --workspace --timeout 120 --out Xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5.4.3
+        with:
+          files: ./backend/cobertura.xml
+          flags: backend
+
+      - name: Run benchmarks
+        run: cargo bench
+
+  # Security Audit Job
+  #
+  # This job performs security auditing on the Rust backend codebase to identify
+  # vulnerabilities and ensure compliance with security policies.
+  #
+  # Dependencies:
+  # - Requires the 'test' job to complete successfully before running
+  # - Uses the RUST_VERSION environment variable for toolchain consistency
+  #
+  # Security Checks Performed:
+  # - cargo-audit: Scans dependencies for known security vulnerabilities
+  # - cargo-deny: Enforces licensing, security, and dependency policies
+  #
+  # Caching Strategy:
+  # - Caches Cargo registry, git database, and build artifacts
+  # - Uses backend Cargo.toml and Cargo.lock files as cache keys
+  # - Improves build performance by avoiding repeated downloads
+  #
+  # Failure Conditions:
+  # - Any security vulnerabilities found by cargo-audit
+  # - Policy violations detected by cargo-deny
+  # - Both tools are configured with --deny=warnings for strict enforcement
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: test
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev pkg-config build-essential
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          override: true
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4.2.3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            backend/target/
+          key: ${{ runner.os }}-cargo-security-${{ hashFiles('backend/Cargo.toml', 'backend/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-security-
+
+      - name: Install security tools
+        run: |
+          cargo install cargo-audit cargo-deny
+
+      - name: Run Cargo Audit
+        run: cargo audit --deny=warnings
+
+      - name: Run Cargo Deny
+        run: cargo deny check --deny=warnings
+
+  # Performance and Monitoring Jobs Documentation
+  #
+  # performance:
+  #   Purpose: Executes performance benchmarks and load testing for the backend
+  #   Trigger: Runs after successful completion of test job
+  #   Key Actions:
+  #     - Runs Rust cargo bench for performance benchmarking
+  #     - Executes load testing using tools like wrk or vegeta
+  #   Dependencies: Requires test job to pass
+  #   Environment: Ubuntu latest
+  #
+  # monitoring:
+  #   Purpose: Sets up application monitoring and observability tools
+  #   Trigger: Runs after successful production deployment
+  #   Key Actions:
+  #     - Configures monitoring dashboards and alerts
+  #     - Sets up application performance monitoring (APM)
+  #     - Establishes logging and metrics collection
+  #   Dependencies: Requires deploy-production job to complete
+  #   Environment: Ubuntu latest
+  #
+  # Note: Both jobs are currently commented out and need implementation
+  # of specific performance testing tools and monitoring configuration
+  # performance:
+  #   name: Performance Tests
+  #   runs-on: ubuntu-latest
+  #   needs: test
+  #   steps:
+  #     - name: Run cargo bench
+  #       run: cargo bench
+
+  #     - name: Load testing
+  #       run: |
+  #         # Add load testing with tools like wrk or vegeta
+
+  # monitoring:
+  #   name: Setup Monitoring
+  #   runs-on: ubuntu-latest
+  #   needs: deploy-production
+  #   steps:
+  #     - name: Configure application monitoring
+  #       run: |
+  #         # Add monitoring configuration steps here
+
+  # Build Docker Image Job
+  #
+  # This job builds a Docker image for the backend service using Docker Buildx.
+  # It runs on Ubuntu latest and only executes after the 'test' job completes successfully.
+  #
+  # Triggers:
+  # - Only runs on push events to 'main' or 'dev' branches
+  #
+  # Steps:
+  # 1. Checks out the repository code using actions/checkout@v4.2.2
+  # 2. Sets up Docker Buildx for advanced build features using docker/setup-buildx-action@v3.10.0
+  # 3. Builds the Docker image from ./backend/Dockerfile with the following configuration:
+  #    - Context: ./backend directory
+  #    - Tag: zkvote-backend:ci-build-<run_id>
+  #    - Uses GitHub Actions cache for build optimization
+  #    - Does not push the image (push: false)
+  #
+  # Cache Strategy:
+  # - Reads from GitHub Actions cache (type=gha)
+  # - Writes to GitHub Actions cache with maximum mode for optimal reuse
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.10.0
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6.18.0
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: zkvote-backend:ci-build-${{ github.run_id }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deployment Jobs
+  #
+  # deploy-staging:
+  #   Conditionally deploys the application to the staging environment
+  #   - Triggered only when changes are pushed to the 'dev' branch
+  #   - Depends on successful completion of the 'build-docker' job
+  #   - Used for testing and validation before production release
+  #
+  # deploy-production:
+  #   Conditionally deploys the application to the production environment
+  #   - Triggered only when changes are pushed to the 'main' branch
+  #   - Depends on successful completion of both 'build-docker' and 'security' jobs
+  #   - Ensures that security checks pass before deploying to live environment
+  # deploy-staging:
+  #   if: github.ref == 'refs/heads/dev'
+  #   needs: build-docker
+  #   # Deploy to staging environment
+
+  # deploy-production:
+  #   if: github.ref == 'refs/heads/main'
+  #   needs: [build-docker, security]
+  #   # Deploy to production
