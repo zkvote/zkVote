@@ -1,0 +1,65 @@
+name: Contract Monitoring
+on:
+  schedule:
+    - cron: "*/30 * * * *" # Every 30 minutes
+  workflow_dispatch:
+jobs:
+  monitor_contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./monitoring
+
+      - name: Run contract monitoring
+        run: node scripts/monitor-contracts.js
+        working-directory: ./monitoring
+        env:
+          INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+
+      - name: Check cross-chain consistency
+        run: node scripts/verify-cross-chain-state.js
+        working-directory: ./monitoring
+        env:
+          INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+
+      - name: Check for anomalies
+        run: |
+          ANOMALY_DETECTED=$(cat ./monitoring/logs/anomalies.json | jq 'length')
+          if [[ $ANOMALY_DETECTED -gt 0 ]]; then
+            echo "ANOMALIES_FOUND=true" >> $GITHUB_ENV
+            cat ./monitoring/logs/anomalies.json > anomalies.json
+          else
+            echo "ANOMALIES_FOUND=false" >> $GITHUB_ENV
+          fi
+
+      - name: Send alert on anomalies
+        if: env.ANOMALIES_FOUND == 'true'
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          payload-file-path: ./monitoring/logs/slack-payload.json
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CONTRACT_ALERT_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Create GitHub issue for anomalies
+        if: env.ANOMALIES_FOUND == 'true'
+        uses: JasonEtco/create-an-issue@v2.9.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/CONTRACT_ANOMALY_TEMPLATE.md
+          update_existing: false
